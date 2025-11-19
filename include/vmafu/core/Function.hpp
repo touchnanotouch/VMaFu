@@ -104,7 +104,7 @@ namespace vmafu {
             // Static methods
 
             static Function constant(T value);
-            static Function linear(T slope, T intercept);
+            static Function linear(T intercept, T slope);
             static Function polynomial(const std::vector<T>& coefficients);
             static Function exponential(T base = static_cast<T>(M_E));
             static Function logarithmic(T base = static_cast<T>(M_E));

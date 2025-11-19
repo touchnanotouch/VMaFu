@@ -458,7 +458,7 @@ namespace vmafu {
     }
 
     template <typename T>
-    Function<T> Function<T>::linear(T slope, T intercept) {
+    Function<T> Function<T>::linear(T intercept, T slope) {
         return Function<T>(std::function<T(T)>([slope, intercept](T x) { return slope * x + intercept; }));
     }
 
