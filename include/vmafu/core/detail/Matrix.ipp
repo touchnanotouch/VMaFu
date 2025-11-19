@@ -54,6 +54,246 @@ namespace vmafu {
         }
     }
     
+    // Helper methods
+
+    template <typename T>
+    T Matrix<T>::_determinant_gauss() const {
+        if constexpr (std::is_integral_v<T>) {
+            Matrix<double> temp(_rows, _cols);
+            for (size_t i = 0; i < _rows; i++) {
+                for (size_t j = 0; j < _cols; j++) {
+                    temp(i, j) = static_cast<double>((*this)(i, j));
+                }
+            }
+            double det = 1.0;
+            
+            for (size_t i = 0; i < _rows; i++) {
+                // Поиск ведущего элемента
+                size_t pivot_row = i;
+                for (size_t k = i + 1; k < _rows; k++) {
+                    if (std::abs(temp(k, i)) > std::abs(temp(pivot_row, i))) {
+                        pivot_row = k;
+                    }
+                }
+                
+                if (std::abs(temp(pivot_row, i)) < _eps) {
+                    return T{0}; // Матрица вырождена
+                }
+                
+                if (pivot_row != i) {
+                    // Меняем строки местами - детерминант меняет знак
+                    for (size_t j = 0; j < _cols; j++) {
+                        std::swap(temp(i, j), temp(pivot_row, j));
+                    }
+                    det = -det;
+                }
+                
+                det *= temp(i, i);
+                
+                // Исключение
+                for (size_t k = i + 1; k < _rows; k++) {
+                    double factor = temp(k, i) / temp(i, i);
+                    for (size_t j = i + 1; j < _cols; j++) {
+                        temp(k, j) -= factor * temp(i, j);
+                    }
+                }
+            }
+            
+            return static_cast<T>(std::round(det));
+        } else {
+            // Оригинальный код для нецелочисленных типов
+            Matrix temp = *this;
+            T det = T{1};
+            
+            for (size_t i = 0; i < _rows; i++) {
+                // Поиск ведущего элемента
+                size_t pivot_row = i;
+                for (size_t k = i + 1; k < _rows; k++) {
+                    if (std::abs(temp(k, i)) > std::abs(temp(pivot_row, i))) {
+                        pivot_row = k;
+                    }
+                }
+                
+                if (std::abs(temp(pivot_row, i)) < _eps) {
+                    return T{0}; // Матрица вырождена
+                }
+                
+                if (pivot_row != i) {
+                    // Меняем строки местами - детерминант меняет знак
+                    for (size_t j = 0; j < _cols; j++) {
+                        std::swap(temp(i, j), temp(pivot_row, j));
+                    }
+                    det = -det;
+                }
+                
+                det *= temp(i, i);
+                
+                // Исключение
+                for (size_t k = i + 1; k < _rows; k++) {
+                    T factor = temp(k, i) / temp(i, i);
+                    for (size_t j = i + 1; j < _cols; j++) {
+                        temp(k, j) -= factor * temp(i, j);
+                    }
+                }
+            }
+            
+            return det;
+        }
+    }
+
+    template <typename T>
+    Matrix<T> Matrix<T>::_inverse_gauss_jordan() const {
+        Matrix augmented(_rows, _rows * 2);
+        
+        // Создаем расширенную матрицу [A|I]
+        for (size_t i = 0; i < _rows; i++) {
+            for (size_t j = 0; j < _rows; j++) {
+                augmented(i, j) = (*this)(i, j);
+            }
+            augmented(i, i + _rows) = T{1};
+        }
+        
+        // Прямой ход метода Гаусса-Жордана
+        for (size_t i = 0; i < _rows; i++) {
+            // Поиск ведущего элемента
+            size_t pivot_row = i;
+            for (size_t k = i + 1; k < _rows; k++) {
+                if (std::abs(augmented(k, i)) > std::abs(augmented(pivot_row, i))) {
+                    pivot_row = k;
+                }
+            }
+            
+            if (std::abs(augmented(pivot_row, i)) < _eps) {
+                throw std::invalid_argument("Matrix is singular");
+            }
+            
+            // Перестановка строк
+            if (pivot_row != i) {
+                for (size_t j = 0; j < 2 * _rows; j++) {
+                    std::swap(augmented(i, j), augmented(pivot_row, j));
+                }
+            }
+            
+            // Нормализация текущей строки
+            T pivot_val = augmented(i, i);
+            for (size_t j = 0; j < 2 * _rows; j++) {
+                augmented(i, j) /= pivot_val;
+            }
+            
+            // Исключение
+            for (size_t k = 0; k < _rows; k++) {
+                if (k != i) {
+                    T factor = augmented(k, i);
+                    for (size_t j = 0; j < 2 * _rows; j++) {
+                        augmented(k, j) -= factor * augmented(i, j);
+                    }
+                }
+            }
+        }
+        
+        // Извлекаем обратную матрицу
+        Matrix result(_rows, _rows);
+        for (size_t i = 0; i < _rows; i++) {
+            for (size_t j = 0; j < _rows; j++) {
+                result(i, j) = augmented(i, j + _rows);
+            }
+        }
+        
+        return result;
+    }
+
+    template <typename T>
+    std::pair<Matrix<T>, Matrix<T>> Matrix<T>::_lu_decomposition() const {
+        _check_square("LU decomposition");
+        
+        Matrix<T> L(_rows, _cols);
+        Matrix<T> U = *this;
+        Matrix<T> P = Matrix<T>::identity(_rows); // матрица перестановок
+        
+        for (size_t k = 0; k < _rows - 1; k++) {
+            // Поиск ведущего элемента
+            size_t pivot_row = k;
+            T max_val = std::abs(U(k, k));
+            
+            for (size_t i = k + 1; i < _rows; i++) {
+                if (std::abs(U(i, k)) > max_val) {
+                    max_val = std::abs(U(i, k));
+                    pivot_row = i;
+                }
+            }
+            
+            if (std::abs(U(pivot_row, k)) < _eps) {
+                throw std::invalid_argument("Matrix is singular for LU decomposition");
+            }
+            
+            // Перестановка строк
+            if (pivot_row != k) {
+                for (size_t j = 0; j < _cols; j++) {
+                    std::swap(U(k, j), U(pivot_row, j));
+                    std::swap(P(k, j), P(pivot_row, j));
+                    if (j < k) {
+                        std::swap(L(k, j), L(pivot_row, j));
+                    }
+                }
+            }
+            
+            // Исключение Гаусса
+            for (size_t i = k + 1; i < _rows; i++) {
+                L(i, k) = U(i, k) / U(k, k);
+                for (size_t j = k; j < _cols; j++) {
+                    U(i, j) -= L(i, k) * U(k, j);
+                }
+            }
+        }
+        
+        // Заполняем диагональ L единицами
+        for (size_t i = 0; i < _rows; i++) {
+            L(i, i) = T{1};
+        }
+        
+        return {L, U};
+    }
+
+    template <typename T>
+    std::pair<Matrix<T>, Matrix<T>> Matrix<T>::_qr_decomposition() const {
+        Matrix<T> Q(_rows, _cols);
+        Matrix<T> R(_cols, _cols);
+        
+        // Копируем столбцы исходной матрицы
+        std::vector<Vector<T>> columns(_cols);
+        for (size_t j = 0; j < _cols; j++) {
+            columns[j] = this->col(j);
+        }
+        
+        // Процесс Грама-Шмидта
+        for (size_t j = 0; j < _cols; j++) {
+            Vector<T> v = columns[j];
+            
+            // Ортогонализация относительно предыдущих столбцов
+            for (size_t i = 0; i < j; i++) {
+                Vector<T> qi = Q.col(i);
+                R(i, j) = qi.dot(columns[j]);
+                v = v - qi * R(i, j);
+            }
+            
+            // Нормализация
+            double norm_v = v.norm();
+            if (norm_v < _eps) {
+                throw std::invalid_argument("Matrix has linearly dependent columns for QR decomposition");
+            }
+            
+            R(j, j) = static_cast<T>(norm_v);
+            Vector<T> qj = v / static_cast<T>(norm_v);
+            
+            // Записываем в матрицу Q
+            for (size_t i = 0; i < _rows; i++) {
+                Q(i, j) = qj[i];
+            }
+        }
+        
+        return {Q, R};
+    }
+
     // Constructors/Destructor
     
     template <typename T>
@@ -82,10 +322,17 @@ namespace vmafu {
             for (const auto& row : init) {
                 if (row.size() != _cols) {
                     delete[] _data;
+                    _data = nullptr;
                     throw std::invalid_argument("All rows must have same size in initializer list");
                 }
 
-                std::copy(row.begin(), row.end(), _data + i * _cols);
+                try {
+                    std::copy(row.begin(), row.end(), _data + i * _cols);
+                } catch (...) {
+                    delete[] _data;
+                    _data = nullptr;
+                    throw;
+                }
 
                 i++;
             }
@@ -126,9 +373,7 @@ namespace vmafu {
     // Setters
 
     template <typename T>
-    void Matrix<T>::set_eps(double new_eps) { 
-        _eps = new_eps; 
-    }
+    void Matrix<T>::set_eps(double new_eps) { _eps = new_eps; }
 
     template <typename T>
     void Matrix<T>::resize(size_t new_rows, size_t new_cols, T value) {
@@ -196,6 +441,7 @@ namespace vmafu {
             Matrix temp(other);
             swap(temp);
         }
+
         return *this;
     }
 
@@ -473,6 +719,27 @@ namespace vmafu {
     }
 
     template <typename T>
+    double Matrix<T>::condition_number() const {
+        if (!is_square()) {
+            throw std::invalid_argument("Condition number is defined only for square matrices");
+        }
+        
+        try {
+            // Используем спектральную норму (норму по сингулярным числам)
+            // Для простоты используем норму Фробениуса
+            double norm_A = norm();
+            Matrix inverse_A = this->inverse();
+            double norm_A_inv = inverse_A.norm();
+            
+            return norm_A * norm_A_inv;
+            
+        } catch (const std::exception& e) {
+            // Если матрица сингулярна, число обусловленности бесконечно
+            return std::numeric_limits<double>::infinity();
+        }
+    }
+
+    template <typename T>
     Matrix<T> Matrix<T>::transpose() const {
         Matrix result(_cols, _rows);
         for (size_t i = 0; i < _rows; i++) {
@@ -482,6 +749,150 @@ namespace vmafu {
         }
 
         return result;
+    }
+
+    template <typename T>
+    T Matrix<T>::determinant() const {
+        _check_square("determinant");
+
+        return determinant(recommended_method());
+    }
+
+    template <typename T>
+    Matrix<T> Matrix<T>::inverse() const {
+        static_assert(
+            !std::is_integral_v<T>, 
+            "Inverse is not supported for integer matrices. Use floating-point types."
+        );
+
+        _check_square("inverse");
+
+        return inverse(recommended_method());
+    }
+
+    template <typename T>
+    T Matrix<T>::determinant(DecompositionMethod method) const {
+        _check_square("determinant");
+        
+        switch(method) {
+            case DecompositionMethod::LU:
+                return determinant_lu();
+            case DecompositionMethod::QR:
+                return determinant_qr();
+            case DecompositionMethod::GAUSS:
+            default:
+                return _determinant_gauss();
+        }
+    }
+
+    template <typename T>
+    Matrix<T> Matrix<T>::inverse(DecompositionMethod method) const {
+        static_assert(
+            !std::is_integral_v<T>, 
+            "Inverse is not supported for integer matrices. Use floating-point types."
+        );
+
+        _check_square("inverse");
+        
+        switch(method) {
+            case DecompositionMethod::LU:
+                return inverse_lu();
+            case DecompositionMethod::QR:
+                return inverse_qr();
+            case DecompositionMethod::GAUSS:
+            default:
+                return _inverse_gauss_jordan();
+        }
+    }
+
+    template <typename T>
+    T Matrix<T>::determinant_lu() const {
+        try {
+            auto [L, U] = _lu_decomposition();
+            T det = T{1};
+            for (size_t i = 0; i < _rows; i++) {
+                det *= U(i, i);
+            }
+            return det;
+        } catch (const std::invalid_argument&) {
+            return T{0}; // Матрица вырождена
+        }
+    }
+
+    template <typename T>
+    T Matrix<T>::determinant_qr() const {
+        try {
+            auto [Q, R] = _qr_decomposition();
+            T det = T{1};
+            for (size_t i = 0; i < _rows; i++) {
+                det *= R(i, i);
+            }
+            // Учитываем, что det(Q) = ±1
+            return std::abs(det) < _eps ? T{0} : det;
+        } catch (const std::invalid_argument&) {
+            return T{0}; // Матрица вырождена
+        }
+    }
+
+    template <typename T>
+    Matrix<T> Matrix<T>::inverse_lu() const {
+        auto [L, U] = _lu_decomposition();
+        
+        // Решаем L * Y = I и U * X = Y для каждого столбца
+        Matrix<T> inv(_rows, _cols);
+        
+        for (size_t col = 0; col < _cols; col++) {
+            // Прямая подстановка для L * Y = I_col
+            Vector<T> y(_rows);
+            for (size_t i = 0; i < _rows; i++) {
+                T sum = T{0};
+                for (size_t j = 0; j < i; j++) {
+                    sum += L(i, j) * y[j];
+                }
+                y[i] = (static_cast<T>(i == col ? 1 : 0) - sum) / L(i, i);
+            }
+            
+            // Обратная подстановка для U * X = Y
+            Vector<T> x(_rows);
+            for (int i = _rows - 1; i >= 0; i--) {
+                T sum = T{0};
+                for (size_t j = i + 1; j < _rows; j++) {
+                    sum += U(i, j) * x[j];
+                }
+                x[i] = (y[i] - sum) / U(i, i);
+            }
+            
+            // Записываем столбец обратной матрицы
+            for (size_t i = 0; i < _rows; i++) {
+                inv(i, col) = x[i];
+            }
+        }
+        
+        return inv;
+    }
+
+    template <typename T>
+    Matrix<T> Matrix<T>::inverse_qr() const {
+        auto [Q, R] = _qr_decomposition();
+        
+        // Обратная матрица = R^{-1} * Q^T
+        Matrix<T> R_inv = R.inverse();
+        Matrix<T> Q_transpose = Q.transpose();
+        
+        return R_inv * Q_transpose;
+    }
+
+    template <typename T>
+    typename Matrix<T>::DecompositionMethod Matrix<T>::recommended_method() const {
+        if (_rows <= 10) {
+            return DecompositionMethod::GAUSS;
+        }
+
+        if (is_symmetric() && is_well_conditioned()) {
+            return DecompositionMethod::LU;
+        }
+
+        return DecompositionMethod::QR;
     }
 
     template <typename T>
@@ -563,6 +974,17 @@ namespace vmafu {
         }
 
         return true;
+    }
+
+    template <typename T>
+    bool Matrix<T>::is_well_conditioned() const {
+        double cond = condition_number();
+
+        if (cond < 1000) { return true; }
+        if (cond < 1e5) { return true; }
+        if (cond < 1e6) { return false; }
+
+        return false;
     }
 
     // Element-wise operations

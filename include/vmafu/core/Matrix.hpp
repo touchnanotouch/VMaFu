@@ -4,6 +4,7 @@
 #include <algorithm>
 #include <cmath>
 #include <ostream>
+#include <stdexcept>
 #include <initializer_list>
 
 
@@ -29,6 +30,15 @@ namespace vmafu {
             void _check_square(const char* op) const;
             void _check_mult_size(const Matrix& rhs, const char* op) const;
             void _check_divisor(T scalar) const;
+
+            // Helper methods
+
+            T _determinant_gauss() const;
+
+            Matrix<T> _inverse_gauss_jordan() const;
+
+            std::pair<Matrix<T>, Matrix<T>> _lu_decomposition() const;
+            std::pair<Matrix<T>, Matrix<T>> _qr_decomposition() const;
 
         public:
             // Constructors/Destructor
@@ -105,13 +115,33 @@ namespace vmafu {
             Matrix& operator*=(T scalar);
             Matrix& operator/=(T scalar);
 
+            // Decomposition types
+
+            enum class DecompositionMethod {
+                LU,
+                QR,
+                GAUSS
+            };
+
             // Linear algebra operators
 
             T trace() const;
-            T determinant() const;
-
+            double condition_number() const;
+            
             Matrix transpose() const;
+
+            T determinant() const;
             Matrix inverse() const;
+
+            T determinant(DecompositionMethod method) const;
+            Matrix inverse(DecompositionMethod method) const;
+            
+            T determinant_lu() const;
+            T determinant_qr() const;
+            Matrix inverse_lu() const; 
+            Matrix inverse_qr() const;
+            
+            DecompositionMethod recommended_method() const;
             
             double norm() const;
             T norm_max() const;
@@ -121,6 +151,7 @@ namespace vmafu {
             bool is_orthogonal() const;
             bool is_symmetric() const;
             bool is_diagonal() const;
+            bool is_well_conditioned() const;
 
             // Element-wise operations
 

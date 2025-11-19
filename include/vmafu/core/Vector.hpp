@@ -4,6 +4,7 @@
 #include <algorithm>
 #include <cmath>
 #include <ostream>
+#include <stdexcept>
 #include <initializer_list>
 
 
