@@ -1,6 +1,6 @@
 namespace vmafu {
     template<typename T>
-    T FredholmIntEq<T>::compute_galerkin_rhs(const Function<T>& basis_func, size_t n_segments) const {
+    T FredholmIntEq<T>::compute_galerkin_rhs(const Function1D<T>& basis_func, size_t n_segments) const {
         T integral = T{0};
         T h = (b_ - a_) / n_segments;
         
@@ -15,7 +15,7 @@ namespace vmafu {
     }
 
     template<typename T>
-    T FredholmIntEq<T>::compute_basis_integral(const Function<T>& basis_i, const Function<T>& basis_j, 
+    T FredholmIntEq<T>::compute_basis_integral(const Function1D<T>& basis_i, const Function1D<T>& basis_j, 
                                             size_t n_segments) const {
         T integral = T{0};
         T h = (b_ - a_) / n_segments;
@@ -31,7 +31,7 @@ namespace vmafu {
     }
 
     template<typename T>
-    T FredholmIntEq<T>::compute_galerkin_kernel_integral(const Function<T>& basis_i, const Function<T>& basis_j,
+    T FredholmIntEq<T>::compute_galerkin_kernel_integral(const Function1D<T>& basis_i, const Function1D<T>& basis_j,
                                                         size_t n_segments) const {
         T integral = T{0};
         T h = (b_ - a_) / n_segments;
@@ -59,14 +59,14 @@ namespace vmafu {
     }
 
     template<typename T>
-    FredholmIntEq<T>::FredholmIntEq(std::function<T(T, T)> kernel,
-                                     const Function<T>& free_term,
+    FredholmIntEq<T>::FredholmIntEq(Function2D<T> kernel,
+                                     const Function1D<T>& free_term,
                                      T lambda,
                                      T a, T b)
         : kernel_(kernel), free_term_(free_term), lambda_(lambda), a_(a), b_(b) {}
 
     template<typename T>
-    Function<T> FredholmIntEq<T>::solve(const IntegralEquationConfig<T>& config) {
+    Function1D<T> FredholmIntEq<T>::solve(const IntegralEquationConfig<T>& config) {
         switch(config.method) {
             case SolutionMethod::Collocation:
                 return solve_collocation(config.n_basis, config.n_points);
@@ -78,7 +78,7 @@ namespace vmafu {
     }
 
     template<typename T>
-    Function<T> FredholmIntEq<T>::solve_collocation(size_t n_basis, size_t n_points) {
+    Function1D<T> FredholmIntEq<T>::solve_collocation(size_t n_basis, size_t n_points) {
         auto basis_funcs = create_basis_functions(n_basis);
         auto points = create_collocation_points(n_points);
         
@@ -102,7 +102,7 @@ namespace vmafu {
         Vector<T> coefficients = ATA.inverse() * ATb;
         
         // Построение решения как линейной комбинации базисных функций
-        return Function<T>([coefficients, basis_funcs](T x) -> T {
+        return Function1D<T>([coefficients, basis_funcs](T x) -> T {
             T result = T{0};
             for(size_t i = 0; i < coefficients.size(); ++i) {
                 result += coefficients[i] * basis_funcs[i](x);
@@ -112,7 +112,7 @@ namespace vmafu {
     }
 
     template<typename T>
-    Function<T> FredholmIntEq<T>::solve_galerkin(size_t n_basis, size_t n_integration_segments) {
+    Function1D<T> FredholmIntEq<T>::solve_galerkin(size_t n_basis, size_t n_integration_segments) {
         auto basis_funcs = create_basis_functions(n_basis);
         
         Matrix<T> A(n_basis, n_basis);
@@ -136,7 +136,7 @@ namespace vmafu {
         Vector<T> coefficients = A.inverse() * b;
         
         // Построение решения как линейной комбинации базисных функций
-        return Function<T>([coefficients, basis_funcs](T x) -> T {
+        return Function1D<T>([coefficients, basis_funcs](T x) -> T {
             T result = T{0};
             for(size_t i = 0; i < coefficients.size(); ++i) {
                 result += coefficients[i] * basis_funcs[i](x);
@@ -146,7 +146,7 @@ namespace vmafu {
     }
 
     template<typename T>
-    T FredholmIntEq<T>::calculate_residual(const Function<T>& solution, size_t n_points) const {
+    T FredholmIntEq<T>::calculate_residual(const Function1D<T>& solution, size_t n_points) const {
         T max_residual = T{0};
         
         for(size_t i = 0; i < n_points; ++i) {
@@ -163,10 +163,10 @@ namespace vmafu {
     }
 
     template<typename T>
-    Vector<Function<T>> FredholmIntEq<T>::create_basis_functions(size_t n_basis) const {
-        Vector<Function<T>> basis(n_basis);
+    Vector<Function1D<T>> FredholmIntEq<T>::create_basis_functions(size_t n_basis) const {
+        Vector<Function1D<T>> basis(n_basis);
         for(size_t i = 0; i < n_basis; ++i) {
-            basis[i] = Function<T>([i](T x) -> T {
+            basis[i] = Function1D<T>([i](T x) -> T {
                 return std::pow(x, static_cast<T>(i));
             });
         }
@@ -183,7 +183,7 @@ namespace vmafu {
     }
 
     template<typename T>
-    T FredholmIntEq<T>::compute_integral(const Function<T>& basis_func, T x, size_t n_segments) const {
+    T FredholmIntEq<T>::compute_integral(const Function1D<T>& basis_func, T x, size_t n_segments) const {
         T integral = T{0};
         T h = (b_ - a_) / n_segments;
         
@@ -198,7 +198,7 @@ namespace vmafu {
     }
 
     template<typename T>
-    T FredholmIntEq<T>::compute_integral_solution(const Function<T>& solution, T x, size_t n_segments) const {
+    T FredholmIntEq<T>::compute_integral_solution(const Function1D<T>& solution, T x, size_t n_segments) const {
         T integral = T{0};
         T h = (b_ - a_) / n_segments;
         

@@ -14,9 +14,9 @@ namespace vmafu {
     template <typename T> class Vector;
 }
 
-// Main class
-
 namespace vmafu {
+    // Main class
+
     template <typename T>
     class Matrix {
         private:

@@ -8,9 +8,9 @@
 #include <initializer_list>
 
 
-// Main class
-
 namespace vmafu {
+    // Main class
+
     template <typename T>
     class Vector {
         private:
