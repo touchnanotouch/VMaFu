@@ -1,3 +1,6 @@
+#include "../Vector.hpp"
+
+
 namespace vmafu {
     // Checks
 
@@ -463,7 +466,7 @@ namespace vmafu {
     }
 
     template <typename T>
-    Function<T> Function<T>::polynomial(const std::vector<T>& coefficients) {
+    Function<T> Function<T>::polynomial(const Vector<T>& coefficients) {
         return Function<T>(std::function<T(T)>([coefficients](T x) {
             T result = 0;
             T power = 1;

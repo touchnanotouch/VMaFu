@@ -34,22 +34,25 @@ namespace vmafu {
     T FredholmIntEq<T>::compute_galerkin_kernel_integral(const Function<T>& basis_i, const Function<T>& basis_j,
                                                         size_t n_segments) const {
         T integral = T{0};
-        T h_x = (b_ - a_) / n_segments;
-        T h_t = (b_ - a_) / n_segments;
+        T h = (b_ - a_) / n_segments;
         
-        // Двойной интеграл по x и t
-        for(size_t k_x = 0; k_x <= n_segments; ++k_x) {
-            T x = a_ + k_x * h_x;
-            T weight_x = (k_x == 0 || k_x == n_segments) ? h_x/3 : 
-                        (k_x % 2 == 1) ? 4*h_x/3 : 2*h_x/3;
+        // Внешний интеграл по x
+        for(size_t i = 0; i <= n_segments; ++i) {
+            T x = a_ + i * h;
+            T weight_x = (i == 0 || i == n_segments) ? h/3 : 
+                        (i % 2 == 1) ? 4*h/3 : 2*h/3;
             
-            for(size_t k_t = 0; k_t <= n_segments; ++k_t) {
-                T t = a_ + k_t * h_t;
-                T weight_t = (k_t == 0 || k_t == n_segments) ? h_t/3 : 
-                            (k_t % 2 == 1) ? 4*h_t/3 : 2*h_t/3;
+            // Внутренний интеграл по t
+            T inner_integral = T{0};
+            for(size_t j = 0; j <= n_segments; ++j) {
+                T t = a_ + j * h;
+                T weight_t = (j == 0 || j == n_segments) ? h/3 : 
+                            (j % 2 == 1) ? 4*h/3 : 2*h/3;
                 
-                integral += weight_x * weight_t * kernel_(x, t) * basis_j(t) * basis_i(x);
+                inner_integral += weight_t * kernel_(x, t) * basis_j(t);
             }
+            
+            integral += weight_x * inner_integral * basis_i(x);
         }
         
         return integral;

@@ -28,25 +28,26 @@ namespace vmafu {
             // Helper methods
 
             Vector<Function<T>> create_basis_functions(size_t n_basis) const;
-            Vector<T> create_collocation_points(size_t n_points) const;
 
             T compute_integral(const Function<T>& basis_func, T x, size_t n_segments = 100) const;
             T compute_integral_solution(const Function<T>& solution, T x, size_t n_segments = 100) const;
 
-            T FredholmIntEq<T>::compute_galerkin_rhs(const Function<T>& basis_func, size_t n_segments) const;
+            T compute_galerkin_rhs(const Function<T>& basis_func, size_t n_segments) const;
 
-            T FredholmIntEq<T>::compute_basis_integral(
+            T compute_basis_integral(
                 const Function<T>& basis_i,
                 const Function<T>& basis_j, 
                 size_t n_segments
             ) const;
 
-            T FredholmIntEq<T>::compute_galerkin_kernel_integral(
+            T compute_galerkin_kernel_integral(
                 const Function<T>& basis_i,
                 const Function<T>& basis_j,
                 size_t n_segments
             ) const;
         public:
+            Vector<T> create_collocation_points(size_t n_points) const;
+
             // Constuctor
 
             FredholmIntEq(std::function<T(T, T)> kernel,

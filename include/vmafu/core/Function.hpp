@@ -1,5 +1,6 @@
 #pragma once
 
+
 #include <algorithm>
 #include <cmath>
 #include <functional>
@@ -107,7 +108,7 @@ namespace vmafu {
 
             static Function constant(T value);
             static Function linear(T intercept, T slope);
-            static Function polynomial(const std::vector<T>& coefficients);
+            static Function polynomial(const Vector<T>& coefficients);
             static Function exponential(T base = static_cast<T>(M_E));
             static Function logarithmic(T base = static_cast<T>(M_E));
             static Function trigonometric_sin();

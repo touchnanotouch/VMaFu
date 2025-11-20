@@ -260,7 +260,7 @@ namespace vmafu {
         Matrix<T> R(_cols, _cols);
         
         // Копируем столбцы исходной матрицы
-        std::vector<Vector<T>> columns(_cols);
+        Vector<Vector<T>> columns(_cols);
         for (size_t j = 0; j < _cols; j++) {
             columns[j] = this->col(j);
         }
