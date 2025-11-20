@@ -1,4 +1,4 @@
-#include "vmafu/core/Vector.hpp"
+#include "../Vector.hpp"
 
 
 namespace vmafu {
@@ -987,7 +987,7 @@ namespace vmafu {
         return false;
     }
 
-    // Element-wise operations
+    // Element-wise methods
 
     template <typename T>
     Matrix<T> Matrix<T>::element_wise_multiply(const Matrix& other) const {

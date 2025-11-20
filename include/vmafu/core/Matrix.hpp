@@ -8,10 +8,15 @@
 #include <initializer_list>
 
 
-namespace vmafu {
-    template <typename T>
-    class Vector;
+// Forward declarations
 
+namespace vmafu {
+    template <typename T> class Vector;
+}
+
+// Main class
+
+namespace vmafu {
     template <typename T>
     class Matrix {
         private:
@@ -153,7 +158,7 @@ namespace vmafu {
             bool is_diagonal() const;
             bool is_well_conditioned() const;
 
-            // Element-wise operations
+            // Element-wise methods
 
             Matrix element_wise_multiply(const Matrix& other) const;
             Matrix element_wise_divide(const Matrix& other) const;

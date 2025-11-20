@@ -8,6 +8,8 @@
 #include <initializer_list>
 
 
+// Main class
+
 namespace vmafu {
     template <typename T>
     class Function {
