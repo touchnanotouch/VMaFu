@@ -1,6 +1,3 @@
-#include "../Vector.hpp"
-
-
 namespace vmafu {
     // Macros
 
@@ -33,6 +30,7 @@ namespace vmafu {
 
     FUNCTION_TEMPLATE_1D
     FUNCTION_TYPE_1D::Function(const Function& other) = default;
+
     FUNCTION_TEMPLATE_1D
     FUNCTION_TYPE_1D::Function(Function&& other) = default;
 
@@ -270,23 +268,48 @@ namespace vmafu {
             throw std::invalid_argument("Number of intervals must be positive");
         }
 
+        if (n % 2 != 0) { n++; }
+        
         ArgT h = (b - a) / n;
-
-        ResultT sum = ((*this)(a) + (*this)(b)) / 2;
+        
+        ResultT sum = (*this)(a) + (*this)(b);
+        
         for (size_t i = 1; i < n; i++) {
-            sum += (*this)(a + i * h);
-        }
+            double coefficient = (i % 2 == 0) ? 2.0 : 4.0;
 
-        return sum * h;
+            sum += coefficient * (*this)(a + i * h);
+        }
+        
+        return sum * h / 3.0;
     }
 
     FUNCTION_TEMPLATE_1D
     template<typename U>
     std::enable_if_t<std::is_floating_point_v<U>, FUNCTION_TYPE_1D>
-    FUNCTION_TYPE_1D::integral(ArgT a, ArgT b, size_t n) const {
-        ResultT value = definite_integral(a, b, n);
+    FUNCTION_TYPE_1D::integral(ArgT c, size_t n) const {
+        _check_initialized("integration");
 
-        return Function::constant(value);
+        if (n % 2 != 0) { n++; }
+        
+        return Function(std::function<ResultT(ArgT)>([this, c, n](ArgT x) {
+            if (x == 0) {
+                return c;
+            }
+
+            ArgT a = 0;
+            ArgT b = x;
+            ArgT h = (b - a) / n;
+            
+            ResultT sum = (*this)(a) + (*this)(b);
+            
+            for (size_t i = 1; i < n; i++) {
+                double coefficient = (i % 2 == 0) ? 2.0 : 4.0;
+
+                sum += coefficient * (*this)(a + i * h);
+            }
+            
+            return sum * h / 3.0 + c;
+        }));
     }
 
     // Functional properties
@@ -561,9 +584,11 @@ namespace vmafu {
     FUNCTION_TEMPLATE_1D
     std::ostream& operator<<(std::ostream& os, const Function<ResultT, ArgT>& f) {
         if (f.is_initialized()) {
-            os << "Function<" << typeid(ResultT).name() << "(" << typeid(ArgT).name() << ")>[initialized]";
+            os << "Function<" << typeid(ResultT).name() 
+            << "(" << typeid(ArgT).name() << ")>[initialized]";
         } else {
-            os << "Function<" << typeid(ResultT).name() << "(" << typeid(ArgT).name() << ")>[uninitialized]";
+            os << "Function<" << typeid(ResultT).name() 
+            << "(" << typeid(ArgT).name() << ")>[uninitialized]";
         }
 
         return os;
@@ -593,7 +618,676 @@ namespace vmafu {
 
     // Function 2-d class
 
+    // Checks
+
+    FUNCTION_TEMPLATE_2D
+    void FUNCTION_TYPE_2D::_check_initialized(const char* op) const {
+        if (!_func) {
+            throw std::runtime_error(std::string("Function not initialized for ") + op);
+        }
+    }
+
+    // Constructors/Destructor
+
+    FUNCTION_TEMPLATE_2D
+    FUNCTION_TYPE_2D::Function() : _func(nullptr) {}
+
+    FUNCTION_TEMPLATE_2D
+    FUNCTION_TYPE_2D::Function(std::function<ResultT(ArgT1, ArgT2)> func) : _func(func) {}
+
+    FUNCTION_TEMPLATE_2D
+    FUNCTION_TYPE_2D::Function(const Function& other) = default;
+
+    FUNCTION_TEMPLATE_2D
+    FUNCTION_TYPE_2D::Function(Function&& other) = default;
+
+    FUNCTION_TEMPLATE_2D
+    FUNCTION_TYPE_2D::~Function() = default;
+
+    // Getters
+
+    FUNCTION_TEMPLATE_2D
+    double FUNCTION_TYPE_2D::eps() const noexcept { return _eps; }
+
+    FUNCTION_TEMPLATE_2D
+    bool FUNCTION_TYPE_2D::is_initialized() const noexcept { return static_cast<bool>(_func); }
+
+    // Setters
+
+    FUNCTION_TEMPLATE_2D
+    void FUNCTION_TYPE_2D::set_eps(double new_eps) { _eps = new_eps; }
+
+    // Copy/Move operators
+
+    FUNCTION_TEMPLATE_2D
+    FUNCTION_TYPE_2D& FUNCTION_TYPE_2D::operator=(const Function& other) = default;
+
+    FUNCTION_TEMPLATE_2D
+    FUNCTION_TYPE_2D& FUNCTION_TYPE_2D::operator=(Function&& other) = default;
+
+    // Access operators
+
+    FUNCTION_TEMPLATE_2D
+    ResultT FUNCTION_TYPE_2D::operator()(ArgT1 x, ArgT2 y) const {
+        _check_initialized("function evaluation");
+
+        return _func(x, y);
+    }
+
+    FUNCTION_TEMPLATE_2D
+    ResultT FUNCTION_TYPE_2D::at(ArgT1 x, ArgT2 y) const {
+        return (*this)(x, y);
+    }
+
+    // Function currying
+
+    FUNCTION_TEMPLATE_2D
+    Function<ResultT, ArgT2> FUNCTION_TYPE_2D::bind_first(ArgT1 x_val) const {
+        _check_initialized("partial application");
+
+        return Function<ResultT, ArgT2>(
+            std::function<ResultT(ArgT2)>([this, x_val](ArgT2 y) { 
+                return (*this)(x_val, y); 
+            })
+        );
+    }
+
+    FUNCTION_TEMPLATE_2D
+    Function<ResultT, ArgT1> FUNCTION_TYPE_2D::bind_second(ArgT2 y_val) const {
+        _check_initialized("partial application");
+
+        return Function<ResultT, ArgT1>(
+            std::function<ResultT(ArgT1)>([this, y_val](ArgT1 x) { 
+                return (*this)(x, y_val); 
+            })
+        );
+    }
+
+    // Arithmetic operators with functions
+
+    FUNCTION_TEMPLATE_2D
+    FUNCTION_TYPE_2D FUNCTION_TYPE_2D::operator+(const Function& rhs) const {
+        _check_initialized("addition");
+        rhs._check_initialized("addition");
+        
+        return Function(std::function<ResultT(ArgT1, ArgT2)>(
+            [this, rhs](ArgT1 x, ArgT2 y) { 
+                return (*this)(x, y) + rhs(x, y); 
+            })
+        );
+    }
+
+    FUNCTION_TEMPLATE_2D
+    FUNCTION_TYPE_2D FUNCTION_TYPE_2D::operator-(const Function& rhs) const {
+        _check_initialized("subtraction");
+        rhs._check_initialized("subtraction");
+        
+        return Function(std::function<ResultT(ArgT1, ArgT2)>(
+            [this, rhs](ArgT1 x, ArgT2 y) { 
+                return (*this)(x, y) - rhs(x, y); 
+            })
+        );
+    }
+
+    FUNCTION_TEMPLATE_2D
+    FUNCTION_TYPE_2D FUNCTION_TYPE_2D::operator*(const Function& rhs) const {
+        _check_initialized("multiplication");
+        rhs._check_initialized("multiplication");
+        
+        return Function(std::function<ResultT(ArgT1, ArgT2)>(
+            [this, rhs](ArgT1 x, ArgT2 y) { 
+                return (*this)(x, y) * rhs(x, y); 
+            })
+        );
+    }
+
+    FUNCTION_TEMPLATE_2D
+    FUNCTION_TYPE_2D FUNCTION_TYPE_2D::operator/(const Function& rhs) const {
+        _check_initialized("division");
+        rhs._check_initialized("division");
+        
+        return Function(std::function<ResultT(ArgT1, ArgT2)>(
+            [this, rhs](ArgT1 x, ArgT2 y) { 
+                ResultT denominator = rhs(x, y);
+                if constexpr (std::is_floating_point_v<ResultT>) {
+                    if (std::abs(denominator) < _eps) {
+                        throw std::invalid_argument("Division by zero in function");
+                    }
+                } else {
+                    if (denominator == ResultT{0}) {
+                        throw std::invalid_argument("Division by zero in function");
+                    }
+                }
+                return (*this)(x, y) / denominator; 
+            })
+        );
+    }
+
+    FUNCTION_TEMPLATE_2D
+    FUNCTION_TYPE_2D& FUNCTION_TYPE_2D::operator+=(const Function& rhs) {
+        *this = *this + rhs;
+
+        return *this;
+    }
+
+    FUNCTION_TEMPLATE_2D
+    FUNCTION_TYPE_2D& FUNCTION_TYPE_2D::operator-=(const Function& rhs) {
+        *this = *this - rhs;
+
+        return *this;
+    }
+
+    FUNCTION_TEMPLATE_2D
+    FUNCTION_TYPE_2D& FUNCTION_TYPE_2D::operator*=(const Function& rhs) {
+        *this = *this * rhs;
+
+        return *this;
+    }
+
+    FUNCTION_TEMPLATE_2D
+    FUNCTION_TYPE_2D& FUNCTION_TYPE_2D::operator/=(const Function& rhs) {
+        *this = *this / rhs;
+
+        return *this;
+    }
+
+    // Arithmetic operators with scalars
+
+    FUNCTION_TEMPLATE_2D
+    FUNCTION_TYPE_2D FUNCTION_TYPE_2D::operator+(ResultT scalar) const {
+        _check_initialized("scalar addition");
+
+        return Function(std::function<ResultT(ArgT1, ArgT2)>(
+            [this, scalar](ArgT1 x, ArgT2 y) { 
+                return (*this)(x, y) + scalar; 
+            })
+        );
+    }
+
+    FUNCTION_TEMPLATE_2D
+    FUNCTION_TYPE_2D FUNCTION_TYPE_2D::operator-(ResultT scalar) const {
+        _check_initialized("scalar subtraction");
+
+        return Function(std::function<ResultT(ArgT1, ArgT2)>(
+            [this, scalar](ArgT1 x, ArgT2 y) { 
+                return (*this)(x, y) - scalar; 
+            })
+        );
+    }
+
+    FUNCTION_TEMPLATE_2D
+    FUNCTION_TYPE_2D FUNCTION_TYPE_2D::operator*(ResultT scalar) const {
+        _check_initialized("scalar multiplication");
+
+        return Function(std::function<ResultT(ArgT1, ArgT2)>(
+            [this, scalar](ArgT1 x, ArgT2 y) { 
+                return (*this)(x, y) * scalar; 
+            })
+        );
+    }
+
+    FUNCTION_TEMPLATE_2D
+    FUNCTION_TYPE_2D FUNCTION_TYPE_2D::operator/(ResultT scalar) const {
+        _check_initialized("scalar division");
+
+        if constexpr (std::is_floating_point_v<ResultT>) {
+            if (std::abs(scalar) < _eps) {
+                throw std::invalid_argument("Division by zero");
+            }
+        } else {
+            if (scalar == ResultT{0}) {
+                throw std::invalid_argument("Division by zero");
+            }
+        }
+
+        return Function(std::function<ResultT(ArgT1, ArgT2)>(
+            [this, scalar](ArgT1 x, ArgT2 y) { 
+                return (*this)(x, y) / scalar; 
+            })
+        );
+    }
+
+    FUNCTION_TEMPLATE_2D
+    FUNCTION_TYPE_2D& FUNCTION_TYPE_2D::operator+=(ResultT scalar) {
+        *this = *this + scalar;
+
+        return *this;
+    }
+
+    FUNCTION_TEMPLATE_2D
+    FUNCTION_TYPE_2D& FUNCTION_TYPE_2D::operator-=(ResultT scalar) {
+        *this = *this - scalar;
+
+        return *this;
+    }
+
+    FUNCTION_TEMPLATE_2D
+    FUNCTION_TYPE_2D& FUNCTION_TYPE_2D::operator*=(ResultT scalar) {
+        *this = *this * scalar;
+
+        return *this;
+    }
+
+    FUNCTION_TEMPLATE_2D
+    FUNCTION_TYPE_2D& FUNCTION_TYPE_2D::operator/=(ResultT scalar) {
+        *this = *this / scalar;
+
+        return *this;
+    }
+
+    // Function composition
+
+    FUNCTION_TEMPLATE_2D
+    template<typename InnerResultT>
+    Function<InnerResultT, ArgT1, ArgT2> FUNCTION_TYPE_2D::compose(
+        const Function<InnerResultT, ResultT>& outer
+    ) const {
+        _check_initialized("composition");
+        outer._check_initialized("composition");
+        
+        return Function<InnerResultT, ArgT1, ArgT2>(
+            [this, outer](ArgT1 x, ArgT2 y) { return outer((*this)(x, y)); }
+        );
+    }
+
+    FUNCTION_TEMPLATE_2D
+    template<typename CurveArgT>
+    Function<ResultT, CurveArgT> FUNCTION_TYPE_2D::compose_with_curve(
+        const Function<ResultT, CurveArgT>& x_curve,
+        const Function<ResultT, CurveArgT>& y_curve
+    ) const {
+        _check_initialized("curve composition");
+
+        if (!x_curve.is_initialized() || !y_curve.is_initialized()) {
+            throw std::runtime_error("Curve functions not initialized for composition");
+        }
+        
+        return Function<ResultT, CurveArgT>(
+            [this, x_curve, y_curve](CurveArgT t) {
+                return (*this)(x_curve(t), y_curve(t));
+            }
+        );
+    }
+
+    // Calculus operators
+
+    FUNCTION_TEMPLATE_2D
+    template<typename U>
+    std::enable_if_t<std::is_floating_point_v<U>, FUNCTION_TYPE_2D>
+    FUNCTION_TYPE_2D::partial_derivative_x(ArgT1 h) const {
+        _check_initialized("partial derivative x");
+        
+        return FUNCTION_TYPE_2D(
+            [this, h](ArgT1 x, ArgT2 y) { 
+                return ((*this)(x + h, y) - (*this)(x - h, y)) / (2 * h); 
+            }
+        );
+    }
+
+    FUNCTION_TEMPLATE_2D
+    template<typename U>
+    std::enable_if_t<std::is_floating_point_v<U>, FUNCTION_TYPE_2D>
+    FUNCTION_TYPE_2D::partial_derivative_y(ArgT2 h) const {
+        _check_initialized("partial derivative y");
+        
+        return FUNCTION_TYPE_2D(
+            [this, h](ArgT1 x, ArgT2 y) { 
+                return ((*this)(x, y + h) - (*this)(x, y - h)) / (2 * h); 
+            }
+        );
+    }
+
+    FUNCTION_TEMPLATE_2D
+    template<typename U>
+    std::enable_if_t<std::is_floating_point_v<U>, ResultT>
+    FUNCTION_TYPE_2D::definite_integral(
+        ArgT1 a1, ArgT1 b1, 
+        ArgT2 a2, ArgT2 b2,
+        size_t n1, size_t n2
+    ) const {
+        _check_initialized("double integration");
+
+        if (n1 == 0 || n2 == 0) {
+            throw std::invalid_argument("Number of intervals must be positive");
+        }
+
+        if (n1 % 2 != 0) { n1++; }
+        if (n2 % 2 != 0) { n2++; }
+
+        ArgT1 h1 = (b1 - a1) / n1;
+        ArgT2 h2 = (b2 - a2) / n2;
+        
+        ResultT sum = 0;
+
+        for (size_t i = 0; i <= n1; i++) {
+            ArgT1 x = a1 + i * h1;
+
+            for (size_t j = 0; j <= n2; j++) {
+                ArgT2 y = a2 + j * h2;
+
+                double coeff_x = 1.0;
+                double coeff_y = 1.0;
+                
+                if (i > 0 && i < n1) {
+                    coeff_x = (i % 2 == 0) ? 2.0 : 4.0;
+                }
+                
+                if (j > 0 && j < n2) {
+                    coeff_y = (j % 2 == 0) ? 2.0 : 4.0;
+                }
+                
+                sum += coeff_x * coeff_y * (*this)(x, y);
+            }
+        }
+        
+        return sum * (h1 / 3.0) * (h2 / 3.0);
+    }
+
+    FUNCTION_TEMPLATE_2D
+    template<typename U>
+    std::enable_if_t<std::is_floating_point_v<U>, 
+        std::pair<FUNCTION_TYPE_2D, FUNCTION_TYPE_2D>
+    >
+    FUNCTION_TYPE_2D::gradient(ArgT1 hx, ArgT2 hy) const {
+        _check_initialized("gradient");
+        
+        auto df_dx = partial_derivative_x(hx);
+        auto df_dy = partial_derivative_y(hy);
+        
+        return std::make_pair(df_dx, df_dy);
+    }
+
+    // Functional properties
+
+    FUNCTION_TEMPLATE_2D
+    template<typename U>
+    std::enable_if_t<std::is_floating_point_v<U>, ResultT>
+    FUNCTION_TYPE_2D::norm(ArgT1 a1, ArgT1 b1, ArgT2 a2, ArgT2 b2, size_t n1, size_t n2) const {
+        _check_initialized("norm calculation");
+        
+        if (n1 == 0 || n2 == 0) {
+            throw std::invalid_argument("Number of intervals must be positive");
+        }
+        
+        ArgT1 h1 = (b1 - a1) / n1;
+        ArgT2 h2 = (b2 - a2) / n2;
+        
+        ResultT sum = 0;
+        
+        for (size_t i = 0; i <= n1; i++) {
+            ArgT1 x = a1 + i * h1;
+            double coeff_x = (i == 0 || i == n1) ? 0.5 : 1.0;
+            
+            for (size_t j = 0; j <= n2; j++) {
+                ArgT2 y = a2 + j * h2;
+                double coeff_y = (j == 0 || j == n2) ? 0.5 : 1.0;
+                
+                ResultT f_val = (*this)(x, y);
+
+                sum += coeff_x * coeff_y * f_val * f_val;
+            }
+        }
+        
+        return std::sqrt(sum * h1 * h2);
+    }
+
+    FUNCTION_TEMPLATE_2D
+    template<typename U>
+    std::enable_if_t<std::is_floating_point_v<U>, ResultT>
+    FUNCTION_TYPE_2D::maximum(ArgT1 a1, ArgT1 b1, ArgT2 a2, ArgT2 b2, size_t n1, size_t n2) const {
+        _check_initialized("maximum finding");
+        
+        if (n1 == 0 || n2 == 0) {
+            throw std::invalid_argument("Number of intervals must be positive");
+        }
+        
+        ArgT1 h1 = (b1 - a1) / n1;
+        ArgT2 h2 = (b2 - a2) / n2;
+        
+        ResultT max_val = (*this)(a1, a2);
+        
+        for (size_t i = 0; i <= n1; i++) {
+            ArgT1 x = a1 + i * h1;
+            
+            for (size_t j = 0; j <= n2; j++) {
+                ArgT2 y = a2 + j * h2;
     
+                ResultT val = (*this)(x, y);
+                if (val > max_val) {
+                    max_val = val;
+                }
+            }
+        }
+        
+        return max_val;
+    }
+
+    FUNCTION_TEMPLATE_2D
+    template<typename U>
+    std::enable_if_t<std::is_floating_point_v<U>, ResultT>  
+    FUNCTION_TYPE_2D::minimum(ArgT1 a1, ArgT1 b1, ArgT2 a2, ArgT2 b2, size_t n1, size_t n2) const {
+        _check_initialized("minimum finding");
+        
+        if (n1 == 0 || n2 == 0) {
+            throw std::invalid_argument("Number of intervals must be positive");
+        }
+        
+        ArgT1 h1 = (b1 - a1) / n1;
+        ArgT2 h2 = (b2 - a2) / n2;
+        
+        ResultT min_val = (*this)(a1, a2);
+        
+        for (size_t i = 0; i <= n1; i++) {
+            ArgT1 x = a1 + i * h1;
+            
+            for (size_t j = 0; j <= n2; j++) {
+                ArgT2 y = a2 + j * h2;
+
+                ResultT val = (*this)(x, y);
+                if (val < min_val) {
+                    min_val = val;
+                }
+            }
+        }
+        
+        return min_val;
+    }
+
+    FUNCTION_TEMPLATE_2D
+    template<typename U>
+    std::enable_if_t<std::is_floating_point_v<U>, std::pair<ArgT1, ArgT2>>
+    FUNCTION_TYPE_2D::root(ArgT1 a1, ArgT1 b1, ArgT2 a2, ArgT2 b2, size_t n) const {
+        _check_initialized("root finding");
+
+        ArgT1 best_x = a1;
+        ArgT2 best_y = a2;
+
+        ResultT min_abs_val = std::abs((*this)(a1, a2));
+
+        ArgT1 h1 = (b1 - a1) / n;
+        ArgT2 h2 = (b2 - a2) / n;
+
+        for (size_t i = 0; i <= n; i++) {
+            ArgT1 x = a1 + i * h1;
+
+            for (size_t j = 0; j <= n; j++) {
+                ArgT2 y = a2 + j * h2;
+
+                ResultT abs_val = std::abs((*this)(x, y));
+
+                if (abs_val < min_abs_val) {
+                    min_abs_val = abs_val;
+
+                    best_x = x;
+                    best_y = y;
+                }
+            }
+        }
+        
+        if (min_abs_val < _eps * 10) {
+            return {best_x, best_y};
+        }
+
+        auto grad = gradient();
+        auto [df_dx_func, df_dy_func] = grad;
+
+        for (size_t refine_iter = 0; refine_iter < 10; refine_iter++) {
+            ResultT f_val = (*this)(best_x, best_y);
+            
+            if (std::abs(f_val) < _eps * 10) {
+                return {best_x, best_y};
+            }
+            
+            ResultT df_dx = df_dx_func(best_x, best_y);
+            ResultT df_dy = df_dy_func(best_x, best_y);
+            
+            ResultT jacobian = df_dx * df_dx + df_dy * df_dy;
+
+            if (std::abs(jacobian) > _eps) {
+                best_x -= (df_dx / jacobian) * f_val;
+                best_y -= (df_dy / jacobian) * f_val;
+            }
+
+            best_x = std::max(a1, std::min(b1, best_x));
+            best_y = std::max(a2, std::min(b2, best_y));
+        }
+        
+        throw std::invalid_argument("Unable to find root within the given tolerance");
+    }
+
+    // Functional analysis
+
+    FUNCTION_TEMPLATE_2D
+    template<typename U>
+    std::enable_if_t<std::is_floating_point_v<U>, bool>
+    FUNCTION_TYPE_2D::is_continuous(ArgT1 a1, ArgT1 b1, ArgT2 a2, ArgT2 b2, size_t n1, size_t n2) const {
+        _check_initialized("continuity check");
+
+        ArgT1 h1 = (b1 - a1) / n1;
+        ArgT2 h2 = (b2 - a2) / n2;
+
+        for (size_t i = 0; i < n1; i++) {
+            ArgT1 x1 = a1 + i * h1;
+            ArgT1 x2 = a1 + (i + 1) * h1;
+            
+            for (size_t j = 0; j < n2; j++) {
+                ArgT2 y1 = a2 + j * h2;
+                ArgT2 y2 = a2 + (j + 1) * h2;
+
+                ResultT diff_x = std::abs((*this)(x2, y1) - (*this)(x1, y1));
+                ResultT diff_y = std::abs((*this)(x1, y2) - (*this)(x1, y1));
+
+                ResultT threshold = std::max(ResultT(1.0), 
+                    std::max(std::abs((*this)(x1, y1)), ResultT(1.0))) * 0.1;
+                
+                if (diff_x > threshold || diff_y > threshold) {
+                    return false;
+                }
+            }
+        }
+        
+        return true;
+    }
+
+    // Comparison operators
+
+    FUNCTION_TEMPLATE_2D
+    bool FUNCTION_TYPE_2D::operator==(const Function& rhs) const {
+        if (!is_initialized() && !rhs.is_initialized()) { return true; }
+        if (!is_initialized() || !rhs.is_initialized()) { return false; }
+
+        const std::vector<std::tuple<ArgT1, ArgT1, ArgT2, ArgT2>> test_regions = {
+            {-1.0, 1.0, -1.0, 1.0},
+            {-5.0, 5.0, -5.0, 5.0},
+            {0.1, 2.0, 0.1, 2.0}
+        };
+        
+        const size_t test_n = 20;
+        
+        for (const auto& region : test_regions) {
+            auto [x1, x2, y1, y2] = region;
+
+            ArgT1 hx = (x2 - x1) / test_n;
+            ArgT2 hy = (y2 - y1) / test_n;
+            
+            for (size_t i = 0; i <= test_n; i++) {
+                ArgT1 x = x1 + i * hx;
+
+                for (size_t j = 0; j <= test_n; j++) {
+                    ArgT2 y = y1 + j * hy;
+                    
+                    try {
+                        ResultT val1 = (*this)(x, y);
+                        ResultT val2 = rhs(x, y);
+                        
+                        if constexpr (std::is_floating_point_v<ResultT>) {
+                            ResultT diff = std::abs(val1 - val2);
+                            ResultT relative_diff = diff / (std::max(std::abs(val1), std::abs(val2)) + 1.0);
+                            
+                            if (diff > _eps && relative_diff > _eps) {
+                                return false;
+                            }
+                        } else {
+                            if (val1 != val2) {
+                                return false;
+                            }
+                        }
+                    } catch (...) {
+                        return false;
+                    }
+                }
+            }
+        }
+        
+        return true;
+    }
+
+    FUNCTION_TEMPLATE_2D
+    bool FUNCTION_TYPE_2D::operator!=(const Function& rhs) const {
+        return !(*this == rhs);
+    }
+
+    // Static methods
+
+    FUNCTION_TEMPLATE_2D
+    FUNCTION_TYPE_2D FUNCTION_TYPE_2D::constant(ResultT value) {
+        return Function(std::function<ResultT(ArgT1, ArgT2)>(
+            [value](ArgT1 x, ArgT2 y) { return value; })
+        );
+    }
+
+    FUNCTION_TEMPLATE_2D
+    FUNCTION_TYPE_2D FUNCTION_TYPE_2D::bilinear(ResultT a, ResultT b, ResultT c, ResultT d) {
+        return Function(std::function<ResultT(ArgT1, ArgT2)>(
+            [a, b, c, d](ArgT1 x, ArgT2 y) { 
+                return a * x * y + b * x + c * y + d; 
+            })
+        );
+    }
+
+    FUNCTION_TEMPLATE_2D
+    FUNCTION_TYPE_2D FUNCTION_TYPE_2D::gaussian(ResultT sigma_x, ResultT sigma_y) {
+        return Function(std::function<ResultT(ArgT1, ArgT2)>(
+            [sigma_x, sigma_y](ArgT1 x, ArgT2 y) { 
+                return std::exp(-(x * x) / (2 * sigma_x * sigma_x) - (y * y) / (2 * sigma_y * sigma_y)); 
+            })
+        );
+    }
+
+    // Friend methods
+
+    FUNCTION_TEMPLATE_2D
+    std::ostream& operator<<(std::ostream& os, const Function<ResultT, ArgT1, ArgT2>& f) {
+        if (f.is_initialized()) {
+            os << "Function<" << typeid(ResultT).name() 
+            << "(" << typeid(ArgT1).name() << ", " << typeid(ArgT2).name() << ")>[initialized]";
+        } else {
+            os << "Function<" << typeid(ResultT).name() 
+            << "(" << typeid(ArgT1).name() << ", " << typeid(ArgT2).name() << ")>[uninitialized]";
+        }
+
+        return os;
+    }
 
     // Undef for internal-use only
 
