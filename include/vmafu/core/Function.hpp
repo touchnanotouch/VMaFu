@@ -3,6 +3,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include <tuple>
 #include <functional>
 #include <ostream>
 #include <stdexcept>
@@ -29,6 +30,7 @@ namespace vmafu {
             // Checks
 
             void _check_initialized(const char* op) const;
+
         public:
             // Constructors/Destructor
 
@@ -84,53 +86,48 @@ namespace vmafu {
 
             // Function composition
 
-            template<typename InnerResultT>
-            Function<ResultT, InnerResultT> compose(const Function<InnerResultT, ArgT>& inner) const;
+            template<typename OuterResultT>
+            Function<OuterResultT, ArgT> compose(const Function<OuterResultT, ResultT>& outer) const;
+
+            template<typename CurveArgT>
+            Function<ResultT, CurveArgT> compose_with_curve(
+                const Function<ArgT, CurveArgT>& x_curve
+            ) const;
 
             // Calculus operators
 
-            template<typename U = ResultT>
-            std::enable_if_t<std::is_floating_point_v<U>, Function<ResultT, ArgT>>
+            std::enable_if_t<std::is_floating_point_v<ResultT>, Function<ResultT, ArgT>>
             derivative(ArgT h = 1e-6) const;
 
-            template<typename U = ResultT>
-            std::enable_if_t<std::is_floating_point_v<U>, ResultT>
+            std::enable_if_t<std::is_floating_point_v<ResultT>, ResultT>
             definite_integral(ArgT a, ArgT b, size_t n = 1000) const;
 
-            template<typename U = ResultT>
-            std::enable_if_t<std::is_floating_point_v<U>, Function<ResultT, ArgT>>
+            std::enable_if_t<std::is_floating_point_v<ResultT>, Function<ResultT, ArgT>>
             integral(ArgT c = 0, size_t n = 1000) const;
 
             // Functional properties
 
-            template<typename U = ResultT>
-            std::enable_if_t<std::is_floating_point_v<U>, ResultT>
+            std::enable_if_t<std::is_floating_point_v<ResultT>, ResultT>
             norm(ArgT a, ArgT b, size_t n = 1000) const;
 
-            template<typename U = ResultT>
-            std::enable_if_t<std::is_floating_point_v<U>, ResultT>
+            std::enable_if_t<std::is_floating_point_v<ResultT>, ResultT>
             maximum(ArgT a, ArgT b, size_t n = 1000) const;
 
-            template<typename U = ResultT>
-            std::enable_if_t<std::is_floating_point_v<U>, ResultT>
+            std::enable_if_t<std::is_floating_point_v<ResultT>, ResultT>
             minimum(ArgT a, ArgT b, size_t n = 1000) const;
 
-            template<typename U = ResultT>
-            std::enable_if_t<std::is_floating_point_v<U>, ResultT>
+            std::enable_if_t<std::is_floating_point_v<ResultT>, ResultT>
             root(ArgT a, ArgT b, size_t n = 100) const;
 
             // Functional analysis
 
-            template<typename U = ResultT>
-            std::enable_if_t<std::is_floating_point_v<U>, bool>
+            std::enable_if_t<std::is_floating_point_v<ResultT>, bool>
             is_continuous(ArgT a, ArgT b, size_t n = 1000) const;
 
-            template<typename U = ResultT>
-            std::enable_if_t<std::is_floating_point_v<U>, bool>
+            std::enable_if_t<std::is_floating_point_v<ResultT>, bool>
             is_monotonic(ArgT a, ArgT b, size_t n = 1000) const;
 
-            template<typename U = ResultT>
-            std::enable_if_t<std::is_floating_point_v<U>, bool>
+            std::enable_if_t<std::is_floating_point_v<ResultT>, bool>
             has_root(ArgT a, ArgT b, size_t n = 100) const;
 
             // Comparison operators
@@ -234,63 +231,54 @@ namespace vmafu {
 
             // Function composition
 
-            template<typename InnerResultT>
-            Function<InnerResultT, ArgT1, ArgT2> compose(const Function<InnerResultT, ResultT>& outer) const;
+            template<typename OuterResultT>
+            Function<OuterResultT, ArgT1, ArgT2> compose(
+                const Function<OuterResultT, ResultT>& outer
+            ) const;
 
             template<typename CurveArgT>
             Function<ResultT, CurveArgT> compose_with_curve(
-                const Function<ResultT, CurveArgT>& x_curve,
-                const Function<ResultT, CurveArgT>& y_curve
+                const Function<ArgT1, CurveArgT>& x_curve,
+                const Function<ArgT2, CurveArgT>& y_curve
             ) const;
 
             // Calculus operators
 
-            template<typename U = ResultT>
-            std::enable_if_t<std::is_floating_point_v<U>, Function<ResultT, ArgT1, ArgT2>>
+            std::enable_if_t<std::is_floating_point_v<ResultT>, Function<ResultT, ArgT1, ArgT2>>
             partial_derivative_x(ArgT1 h = 1e-6) const;
 
-            template<typename U = ResultT>  
-            std::enable_if_t<std::is_floating_point_v<U>, Function<ResultT, ArgT1, ArgT2>>
+            std::enable_if_t<std::is_floating_point_v<ResultT>, Function<ResultT, ArgT1, ArgT2>>
             partial_derivative_y(ArgT2 h = 1e-6) const;
 
-            template<typename U = ResultT>
-            std::enable_if_t<std::is_floating_point_v<U>, ResultT>
+            std::enable_if_t<std::is_floating_point_v<ResultT>, ResultT>
             definite_integral(
                 ArgT1 a1, ArgT1 b1,
                 ArgT2 a2, ArgT2 b2,
                 size_t n1 = 100, size_t n2 = 100
             ) const;
 
-            template<typename U = ResultT>
-            std::enable_if_t<
-                std::is_floating_point_v<U>, std::pair<
-                    Function<ResultT, ArgT1, ArgT2>, Function<ResultT, ArgT1, ArgT2>
-                >
+            std::enable_if_t<std::is_floating_point_v<ResultT>, 
+                std::pair<Function<ResultT, ArgT1, ArgT2>, Function<ResultT, ArgT1, ArgT2>>
             >
             gradient(ArgT1 hx = 1e-6, ArgT2 hy = 1e-6) const;
 
             // Functional properties
 
-            template<typename U = ResultT>
-            std::enable_if_t<std::is_floating_point_v<U>, ResultT>
+            std::enable_if_t<std::is_floating_point_v<ResultT>, ResultT>
             norm(ArgT1 a1, ArgT1 b1, ArgT2 a2, ArgT2 b2, size_t n1 = 100, size_t n2 = 100) const;
 
-            template<typename U = ResultT>
-            std::enable_if_t<std::is_floating_point_v<U>, ResultT>
+            std::enable_if_t<std::is_floating_point_v<ResultT>, ResultT>
             maximum(ArgT1 a1, ArgT1 b1, ArgT2 a2, ArgT2 b2, size_t n1 = 100, size_t n2 = 100) const;
 
-            template<typename U = ResultT>
-            std::enable_if_t<std::is_floating_point_v<U>, ResultT>  
+            std::enable_if_t<std::is_floating_point_v<ResultT>, ResultT>
             minimum(ArgT1 a1, ArgT1 b1, ArgT2 a2, ArgT2 b2, size_t n1 = 100, size_t n2 = 100) const;
 
-            template<typename U = ResultT>
-            std::enable_if_t<std::is_floating_point_v<U>, std::pair<ArgT1, ArgT2>>
+            std::enable_if_t<std::is_floating_point_v<ResultT>, std::pair<ArgT1, ArgT2>>
             root(ArgT1 a1, ArgT1 b1, ArgT2 a2, ArgT2 b2, size_t n = 100) const;
 
             // Functional analysis
 
-            template<typename U = ResultT>
-            std::enable_if_t<std::is_floating_point_v<U>, bool>
+            std::enable_if_t<std::is_floating_point_v<ResultT>, bool>
             is_continuous(ArgT1 a1, ArgT1 b1, ArgT2 a2, ArgT2 b2, size_t n1 = 100, size_t n2 = 100) const;
 
             // Comparison operators
@@ -304,10 +292,11 @@ namespace vmafu {
             static Function bilinear(ResultT a, ResultT b, ResultT c, ResultT d);
             static Function gaussian(ResultT sigma_x = 1.0, ResultT sigma_y = 1.0);
 
+            static Function from_function_ptr(ResultT (*func)(ArgT1, ArgT2));
+
             // Friend methods
 
-            template <typename U, typename V, typename W>
-            friend std::ostream& operator<<(std::ostream& os, const Function<U, V, W>& f);
+            friend std::ostream& operator<<(std::ostream& os, const Function<ResultT, ArgT1, ArgT2>& f);
         };
 
     // Function 3-d class (basic implementation, code plugs, propably not working)
@@ -316,99 +305,166 @@ namespace vmafu {
     class Function<ResultT, ArgT1, ArgT2, ArgT3> {
         private:
             std::function<ResultT(ArgT1, ArgT2, ArgT3)> _func;
+            
             double _eps = 1e-10;
 
-            void _check_initialized(const char* op) const {
-                if (!_func) {
-                    throw std::runtime_error(std::string("Function not initialized for ") + op);
-                }
-            }
+            // Checks
+
+            void _check_initialized(const char* op) const;
 
         public:
-            // Constructors
-            Function() : _func(nullptr) {}
-            Function(std::function<ResultT(ArgT1, ArgT2, ArgT3)> func) : _func(func) {}
-            Function(const Function& other) = default;
-            Function(Function&& other) = default;
-            ~Function() = default;
 
-            // Getters/Setters
-            double eps() const noexcept { return _eps; }
-            bool is_initialized() const noexcept { return static_cast<bool>(_func); }
-            void set_eps(double new_eps) { _eps = new_eps; }
+            // Constructors/Destructor
+
+            Function();
+            Function(std::function<ResultT(ArgT1, ArgT2, ArgT3)> func);
+            Function(const Function& other);
+            Function(Function&& other);
+
+            ~Function();
+
+            // Getters
+
+            double eps() const noexcept;
+            bool is_initialized() const noexcept;
+
+            // Setters
+
+            void set_eps(double new_eps);
 
             // Copy/Move operators
-            Function& operator=(const Function& other) = default;
-            Function& operator=(Function&& other) = default;
+    
+            Function& operator=(const Function& other);
+            Function& operator=(Function&& other);
 
-            // Evaluation
-            ResultT operator()(ArgT1 x, ArgT2 y, ArgT3 z) const {
-                _check_initialized("function evaluation");
-                return _func(x, y, z);
-            }
+            // Access operators
 
-            ResultT at(ArgT1 x, ArgT2 y, ArgT3 z) const { return (*this)(x, y, z); }
+            ResultT operator()(ArgT1 x, ArgT2 y, ArgT3 z) const;
+            ResultT at(ArgT1 x, ArgT2 y, ArgT3 z) const;
 
-            // Currying
-            Function<ResultT, ArgT2, ArgT3> bind_first(ArgT1 x_val) const {
-                _check_initialized("partial application");
-                return Function<ResultT, ArgT2, ArgT3>(
-                    [*this, x_val](ArgT2 y, ArgT3 z) { return (*this)(x_val, y, z); }
-                );
-            }
+            // Function currying
 
-            Function<ResultT, ArgT1, ArgT3> bind_second(ArgT2 y_val) const {
-                _check_initialized("partial application");
-                return Function<ResultT, ArgT1, ArgT3>(
-                    [*this, y_val](ArgT1 x, ArgT3 z) { return (*this)(x, y_val, z); }
-                );
-            }
+            Function<ResultT, ArgT2, ArgT3> bind_first(ArgT1 x_val) const;
+            Function<ResultT, ArgT1, ArgT3> bind_second(ArgT2 y_val) const;
+            Function<ResultT, ArgT1, ArgT2> bind_third(ArgT3 z_val) const;
 
-            Function<ResultT, ArgT1, ArgT2> bind_third(ArgT3 z_val) const {
-                _check_initialized("partial application");
-                return Function<ResultT, ArgT1, ArgT2>(
-                    [*this, z_val](ArgT1 x, ArgT2 y) { return (*this)(x, y, z_val); }
-                );
-            }
+            // Arithmetic operators with functions
+
+            Function operator+(const Function& rhs) const;
+            Function operator-(const Function& rhs) const;
+            Function operator*(const Function& rhs) const;
+            Function operator/(const Function& rhs) const;
+
+            Function& operator+=(const Function& rhs);
+            Function& operator-=(const Function& rhs);
+            Function& operator*=(const Function& rhs);
+            Function& operator/=(const Function& rhs);
+
+            // Arithmetic operators with scalars
+
+            Function operator+(ResultT scalar) const;
+            Function operator-(ResultT scalar) const;
+            Function operator*(ResultT scalar) const;
+            Function operator/(ResultT scalar) const;
+
+            Function& operator+=(ResultT scalar);
+            Function& operator-=(ResultT scalar);
+            Function& operator*=(ResultT scalar);
+            Function& operator/=(ResultT scalar);
+            
+            // Function composition
+
+            template<typename OuterResultT>
+            Function<OuterResultT, ArgT1, ArgT2, ArgT3> compose(
+                const Function<OuterResultT, ResultT>& outer
+            ) const;
+
+            template<typename CurveArgT>
+            Function<ResultT, CurveArgT> compose_with_curve(
+                const Function<ArgT1, CurveArgT>& x_curve,
+                const Function<ArgT2, CurveArgT>& y_curve,
+                const Function<ArgT3, CurveArgT>& z_curve
+            ) const;
+
+            // Calculus operators  
+
+            std::enable_if_t<std::is_floating_point_v<ResultT>, Function<ResultT, ArgT1, ArgT2, ArgT3>>
+            partial_derivative_x(ArgT1 h = 1e-6) const;
+
+            std::enable_if_t<std::is_floating_point_v<ResultT>, Function<ResultT, ArgT1, ArgT2, ArgT3>>
+            partial_derivative_y(ArgT2 h = 1e-6) const;
+
+            std::enable_if_t<std::is_floating_point_v<ResultT>, Function<ResultT, ArgT1, ArgT2, ArgT3>>
+            partial_derivative_z(ArgT3 h = 1e-6) const;
+
+            std::enable_if_t<std::is_floating_point_v<ResultT>, ResultT>
+            definite_integral(
+                ArgT1 a1, ArgT1 b1,
+                ArgT2 a2, ArgT2 b2, 
+                ArgT3 a3, ArgT3 b3,
+                size_t n1, size_t n2, size_t n3
+            ) const;
+
+            std::enable_if_t<
+                std::is_floating_point_v<ResultT>, 
+                std::tuple<
+                    Function<ResultT, ArgT1, ArgT2, ArgT3>, 
+                    Function<ResultT, ArgT1, ArgT2, ArgT3>,
+                    Function<ResultT, ArgT1, ArgT2, ArgT3>
+                >
+            >
+            gradient(ArgT1 hx, ArgT2 hy, ArgT3 hz) const;
+
+            // Functional properties
+
+            std::enable_if_t<std::is_floating_point_v<ResultT>, ResultT>
+            norm(
+                ArgT1 a1, ArgT1 b1,
+                ArgT2 a2, ArgT2 b2,
+                ArgT3 a3, ArgT3 b3, 
+                size_t n1, size_t n2, size_t n3
+            ) const;
+
+            std::enable_if_t<std::is_floating_point_v<ResultT>, ResultT>
+            maximum(
+                ArgT1 a1, ArgT1 b1,
+                ArgT2 a2, ArgT2 b2,
+                ArgT3 a3, ArgT3 b3,
+                size_t n1, size_t n2, size_t n3
+            ) const;
+
+            std::enable_if_t<std::is_floating_point_v<ResultT>, ResultT>
+            minimum(
+                ArgT1 a1, ArgT1 b1,
+                ArgT2 a2, ArgT2 b2,
+                ArgT3 a3, ArgT3 b3,
+                size_t n1, size_t n2, size_t n3
+            ) const;
+
+            // Functional analysis
+
+            std::enable_if_t<std::is_floating_point_v<ResultT>, bool>
+            is_continuous(
+                ArgT1 a1, ArgT1 b1,
+                ArgT2 a2, ArgT2 b2,
+                ArgT3 a3, ArgT3 b3,
+                size_t n1, size_t n2, size_t n3
+            ) const;
 
             // Static methods
-            static Function constant(ResultT value) {
-                return Function(std::function<ResultT(ArgT1, ArgT2, ArgT3)>(
-                    [value](ArgT1 x, ArgT2 y, ArgT3 z) { return value; })
-                );
-            }
 
-            // Comparison operators
-            bool operator==(const Function& rhs) const {
-                if (!is_initialized() && !rhs.is_initialized()) return true;
-                if (!is_initialized() || !rhs.is_initialized()) return false;
-                
-                // Simple test for 3D functions
-                const ArgT1 test_x1 = -1, test_x2 = 1;
-                const ArgT2 test_y1 = -1, test_y2 = 1;
-                const ArgT3 test_z1 = -1, test_z2 = 1;
-                const size_t test_n = 5;
-                
-                for (size_t i = 0; i <= test_n; i++) {
-                    for (size_t j = 0; j <= test_n; j++) {
-                        for (size_t k = 0; k <= test_n; k++) {
-                            ArgT1 x = test_x1 + i * (test_x2 - test_x1) / test_n;
-                            ArgT2 y = test_y1 + j * (test_y2 - test_y1) / test_n;
-                            ArgT3 z = test_z1 + k * (test_z2 - test_z1) / test_n;
-                            if constexpr (std::is_floating_point_v<ResultT>) {
-                                if (std::abs((*this)(x, y, z) - rhs(x, y, z)) > _eps) return false;
-                            } else {
-                                if ((*this)(x, y, z) != rhs(x, y, z)) return false;
-                            }
-                        }
-                    }
-                }
-                return true;
-            }
+            static Function constant(ResultT value);
+            static Function trilinear(
+                ResultT a, ResultT b, ResultT c, ResultT d, 
+                ResultT e, ResultT f, ResultT g, ResultT h
+            );
+            static Function gaussian(ResultT sigma_x = 1.0, ResultT sigma_y = 1.0, ResultT sigma_z = 1.0);
 
-            bool operator!=(const Function& rhs) const {
-                return !(*this == rhs);
-            }
+            static Function from_function_ptr(ResultT (*func)(ArgT1, ArgT2, ArgT3));
+
+            // Friend methods
+
+            friend std::ostream& operator<<(std::ostream& os, const Function<ResultT, ArgT1, ArgT2, ArgT3>& f);
     };
 
     // External methods

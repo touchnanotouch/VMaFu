@@ -233,23 +233,35 @@ namespace vmafu {
     // Function composition
 
     FUNCTION_TEMPLATE_1D
-    template<typename InnerResultT>
-    Function<ResultT, InnerResultT> FUNCTION_TYPE_1D::compose(const Function<InnerResultT, ArgT>& inner) const {
+    template<typename OuterResultT>
+    Function<OuterResultT, ArgT> FUNCTION_TYPE_1D::compose(
+        const Function<OuterResultT, ResultT>& outer
+    ) const {
         _check_initialized("composition");
-        inner._check_initialized("composition");
         
-        return Function<ResultT, InnerResultT>(
-            std::function<ResultT(InnerResultT)>([this, inner](InnerResultT x) { 
-                return (*this)(inner(x)); 
+        return Function<OuterResultT, ArgT>(
+            std::function<OuterResultT(ArgT)>([this, outer](ArgT x) { 
+                return outer((*this)(x));
             })
+        );
+    }
+
+    FUNCTION_TEMPLATE_1D
+    template<typename CurveArgT>
+    Function<ResultT, CurveArgT> FUNCTION_TYPE_1D::compose_with_curve(
+        const Function<ArgT, CurveArgT>& x_curve
+    ) const {
+        return Function<ResultT, CurveArgT>(
+            [this, x_curve](CurveArgT t) {
+                return (*this)(x_curve(t));
+            }
         );
     }
 
     // Calculus operators
 
     FUNCTION_TEMPLATE_1D
-    template<typename U>
-    std::enable_if_t<std::is_floating_point_v<U>, FUNCTION_TYPE_1D>
+    std::enable_if_t<std::is_floating_point_v<ResultT>, FUNCTION_TYPE_1D>
     FUNCTION_TYPE_1D::derivative(ArgT h) const {
         _check_initialized("derivative");
 
@@ -259,8 +271,7 @@ namespace vmafu {
     }
 
     FUNCTION_TEMPLATE_1D
-    template<typename U>
-    std::enable_if_t<std::is_floating_point_v<U>, ResultT>
+    std::enable_if_t<std::is_floating_point_v<ResultT>, ResultT>
     FUNCTION_TYPE_1D::definite_integral(ArgT a, ArgT b, size_t n) const {
         _check_initialized("integration");
 
@@ -284,8 +295,7 @@ namespace vmafu {
     }
 
     FUNCTION_TEMPLATE_1D
-    template<typename U>
-    std::enable_if_t<std::is_floating_point_v<U>, FUNCTION_TYPE_1D>
+    std::enable_if_t<std::is_floating_point_v<ResultT>, FUNCTION_TYPE_1D>
     FUNCTION_TYPE_1D::integral(ArgT c, size_t n) const {
         _check_initialized("integration");
 
@@ -315,8 +325,7 @@ namespace vmafu {
     // Functional properties
 
     FUNCTION_TEMPLATE_1D
-    template<typename U>
-    std::enable_if_t<std::is_floating_point_v<U>, ResultT>
+    std::enable_if_t<std::is_floating_point_v<ResultT>, ResultT>
     FUNCTION_TYPE_1D::norm(ArgT a, ArgT b, size_t n) const {
         _check_initialized("norm calculation");
 
@@ -335,8 +344,7 @@ namespace vmafu {
     }
 
     FUNCTION_TEMPLATE_1D
-    template<typename U>
-    std::enable_if_t<std::is_floating_point_v<U>, ResultT>
+    std::enable_if_t<std::is_floating_point_v<ResultT>, ResultT>
     FUNCTION_TYPE_1D::maximum(ArgT a, ArgT b, size_t n) const {
         _check_initialized("maximum finding");
 
@@ -357,8 +365,7 @@ namespace vmafu {
     }
 
     FUNCTION_TEMPLATE_1D
-    template<typename U>
-    std::enable_if_t<std::is_floating_point_v<U>, ResultT>
+    std::enable_if_t<std::is_floating_point_v<ResultT>, ResultT>
     FUNCTION_TYPE_1D::minimum(ArgT a, ArgT b, size_t n) const {
         _check_initialized("minimum finding");
 
@@ -379,8 +386,7 @@ namespace vmafu {
     }
 
     FUNCTION_TEMPLATE_1D
-    template<typename U>
-    std::enable_if_t<std::is_floating_point_v<U>, ResultT>
+    std::enable_if_t<std::is_floating_point_v<ResultT>, ResultT>
     FUNCTION_TYPE_1D::root(ArgT a, ArgT b, size_t n) const {
         _check_initialized("root finding");
 
@@ -411,8 +417,7 @@ namespace vmafu {
     // Functional analysis
 
     FUNCTION_TEMPLATE_1D
-    template<typename U>
-    std::enable_if_t<std::is_floating_point_v<U>, bool>
+    std::enable_if_t<std::is_floating_point_v<ResultT>, bool>
     FUNCTION_TYPE_1D::is_continuous(ArgT a, ArgT b, size_t n) const {
         _check_initialized("continuity check");
 
@@ -432,8 +437,7 @@ namespace vmafu {
     }
 
     FUNCTION_TEMPLATE_1D
-    template<typename U>
-    std::enable_if_t<std::is_floating_point_v<U>, bool>
+    std::enable_if_t<std::is_floating_point_v<ResultT>, bool>
     FUNCTION_TYPE_1D::is_monotonic(ArgT a, ArgT b, size_t n) const {
         _check_initialized("monotonicity check");
 
@@ -459,8 +463,7 @@ namespace vmafu {
     }
 
     FUNCTION_TEMPLATE_1D
-    template<typename U>
-    std::enable_if_t<std::is_floating_point_v<U>, bool>
+    std::enable_if_t<std::is_floating_point_v<ResultT>, bool>
     FUNCTION_TYPE_1D::has_root(ArgT a, ArgT b, size_t n) const {
         _check_initialized("root existence check");
 
@@ -749,6 +752,7 @@ namespace vmafu {
         return Function(std::function<ResultT(ArgT1, ArgT2)>(
             [this, rhs](ArgT1 x, ArgT2 y) { 
                 ResultT denominator = rhs(x, y);
+
                 if constexpr (std::is_floating_point_v<ResultT>) {
                     if (std::abs(denominator) < _eps) {
                         throw std::invalid_argument("Division by zero in function");
@@ -758,6 +762,7 @@ namespace vmafu {
                         throw std::invalid_argument("Division by zero in function");
                     }
                 }
+
                 return (*this)(x, y) / denominator; 
             })
         );
@@ -878,23 +883,24 @@ namespace vmafu {
     // Function composition
 
     FUNCTION_TEMPLATE_2D
-    template<typename InnerResultT>
-    Function<InnerResultT, ArgT1, ArgT2> FUNCTION_TYPE_2D::compose(
-        const Function<InnerResultT, ResultT>& outer
+    template<typename OuterResultT>
+    Function<OuterResultT, ArgT1, ArgT2> FUNCTION_TYPE_2D::compose(
+        const Function<OuterResultT, ResultT>& outer
     ) const {
         _check_initialized("composition");
-        outer._check_initialized("composition");
         
-        return Function<InnerResultT, ArgT1, ArgT2>(
-            [this, outer](ArgT1 x, ArgT2 y) { return outer((*this)(x, y)); }
+        return Function<OuterResultT, ArgT1, ArgT2>(
+            [this, outer](ArgT1 x, ArgT2 y) {
+                return outer((*this)(x, y)); 
+            }
         );
     }
 
     FUNCTION_TEMPLATE_2D
     template<typename CurveArgT>
     Function<ResultT, CurveArgT> FUNCTION_TYPE_2D::compose_with_curve(
-        const Function<ResultT, CurveArgT>& x_curve,
-        const Function<ResultT, CurveArgT>& y_curve
+        const Function<ArgT1, CurveArgT>& x_curve,
+        const Function<ArgT2, CurveArgT>& y_curve
     ) const {
         _check_initialized("curve composition");
 
@@ -912,8 +918,7 @@ namespace vmafu {
     // Calculus operators
 
     FUNCTION_TEMPLATE_2D
-    template<typename U>
-    std::enable_if_t<std::is_floating_point_v<U>, FUNCTION_TYPE_2D>
+    std::enable_if_t<std::is_floating_point_v<ResultT>, FUNCTION_TYPE_2D>
     FUNCTION_TYPE_2D::partial_derivative_x(ArgT1 h) const {
         _check_initialized("partial derivative x");
         
@@ -925,8 +930,7 @@ namespace vmafu {
     }
 
     FUNCTION_TEMPLATE_2D
-    template<typename U>
-    std::enable_if_t<std::is_floating_point_v<U>, FUNCTION_TYPE_2D>
+    std::enable_if_t<std::is_floating_point_v<ResultT>, FUNCTION_TYPE_2D>
     FUNCTION_TYPE_2D::partial_derivative_y(ArgT2 h) const {
         _check_initialized("partial derivative y");
         
@@ -938,8 +942,7 @@ namespace vmafu {
     }
 
     FUNCTION_TEMPLATE_2D
-    template<typename U>
-    std::enable_if_t<std::is_floating_point_v<U>, ResultT>
+    std::enable_if_t<std::is_floating_point_v<ResultT>, ResultT>
     FUNCTION_TYPE_2D::definite_integral(
         ArgT1 a1, ArgT1 b1, 
         ArgT2 a2, ArgT2 b2,
@@ -984,8 +987,7 @@ namespace vmafu {
     }
 
     FUNCTION_TEMPLATE_2D
-    template<typename U>
-    std::enable_if_t<std::is_floating_point_v<U>, 
+    std::enable_if_t<std::is_floating_point_v<ResultT>, 
         std::pair<FUNCTION_TYPE_2D, FUNCTION_TYPE_2D>
     >
     FUNCTION_TYPE_2D::gradient(ArgT1 hx, ArgT2 hy) const {
@@ -1000,8 +1002,7 @@ namespace vmafu {
     // Functional properties
 
     FUNCTION_TEMPLATE_2D
-    template<typename U>
-    std::enable_if_t<std::is_floating_point_v<U>, ResultT>
+    std::enable_if_t<std::is_floating_point_v<ResultT>, ResultT>
     FUNCTION_TYPE_2D::norm(ArgT1 a1, ArgT1 b1, ArgT2 a2, ArgT2 b2, size_t n1, size_t n2) const {
         _check_initialized("norm calculation");
         
@@ -1032,8 +1033,7 @@ namespace vmafu {
     }
 
     FUNCTION_TEMPLATE_2D
-    template<typename U>
-    std::enable_if_t<std::is_floating_point_v<U>, ResultT>
+    std::enable_if_t<std::is_floating_point_v<ResultT>, ResultT>
     FUNCTION_TYPE_2D::maximum(ArgT1 a1, ArgT1 b1, ArgT2 a2, ArgT2 b2, size_t n1, size_t n2) const {
         _check_initialized("maximum finding");
         
@@ -1063,8 +1063,7 @@ namespace vmafu {
     }
 
     FUNCTION_TEMPLATE_2D
-    template<typename U>
-    std::enable_if_t<std::is_floating_point_v<U>, ResultT>  
+    std::enable_if_t<std::is_floating_point_v<ResultT>, ResultT>  
     FUNCTION_TYPE_2D::minimum(ArgT1 a1, ArgT1 b1, ArgT2 a2, ArgT2 b2, size_t n1, size_t n2) const {
         _check_initialized("minimum finding");
         
@@ -1094,8 +1093,7 @@ namespace vmafu {
     }
 
     FUNCTION_TEMPLATE_2D
-    template<typename U>
-    std::enable_if_t<std::is_floating_point_v<U>, std::pair<ArgT1, ArgT2>>
+    std::enable_if_t<std::is_floating_point_v<ResultT>, std::pair<ArgT1, ArgT2>>
     FUNCTION_TYPE_2D::root(ArgT1 a1, ArgT1 b1, ArgT2 a2, ArgT2 b2, size_t n) const {
         _check_initialized("root finding");
 
@@ -1158,8 +1156,7 @@ namespace vmafu {
     // Functional analysis
 
     FUNCTION_TEMPLATE_2D
-    template<typename U>
-    std::enable_if_t<std::is_floating_point_v<U>, bool>
+    std::enable_if_t<std::is_floating_point_v<ResultT>, bool>
     FUNCTION_TYPE_2D::is_continuous(ArgT1 a1, ArgT1 b1, ArgT2 a2, ArgT2 b2, size_t n1, size_t n2) const {
         _check_initialized("continuity check");
 
@@ -1274,6 +1271,11 @@ namespace vmafu {
         );
     }
 
+    FUNCTION_TEMPLATE_2D
+    FUNCTION_TYPE_2D FUNCTION_TYPE_2D::from_function_ptr(ResultT (*func)(ArgT1, ArgT2)) {
+        return Function(std::function<ResultT(ArgT1, ArgT2)>(func));
+    }
+
     // Friend methods
 
     FUNCTION_TEMPLATE_2D
@@ -1284,6 +1286,652 @@ namespace vmafu {
         } else {
             os << "Function<" << typeid(ResultT).name() 
             << "(" << typeid(ArgT1).name() << ", " << typeid(ArgT2).name() << ")>[uninitialized]";
+        }
+
+        return os;
+    }
+
+    // Function 3-d class
+
+    // Checks
+
+    FUNCTION_TEMPLATE_3D
+    void FUNCTION_TYPE_3D::_check_initialized(const char* op) const {
+        if (!_func) {
+            throw std::runtime_error(std::string("Function not initialized for ") + op);
+        }
+    }
+
+    // Constructors/Destructor
+
+    FUNCTION_TEMPLATE_3D
+    FUNCTION_TYPE_3D::Function() : _func(nullptr) {}
+
+    FUNCTION_TEMPLATE_3D
+    FUNCTION_TYPE_3D::Function(std::function<ResultT(ArgT1, ArgT2, ArgT3)> func) : _func(func) {}
+
+    FUNCTION_TEMPLATE_3D
+    FUNCTION_TYPE_3D::Function(const Function& other) = default;
+
+    FUNCTION_TEMPLATE_3D
+    FUNCTION_TYPE_3D::Function(Function&& other) = default;
+
+    FUNCTION_TEMPLATE_3D
+    FUNCTION_TYPE_3D::~Function() = default;
+
+    // Getters
+
+    FUNCTION_TEMPLATE_3D
+    double FUNCTION_TYPE_3D::eps() const noexcept { return _eps; }
+
+    FUNCTION_TEMPLATE_3D
+    bool FUNCTION_TYPE_3D::is_initialized() const noexcept { return static_cast<bool>(_func); }
+
+    // Setters
+
+    FUNCTION_TEMPLATE_3D
+    void FUNCTION_TYPE_3D::set_eps(double new_eps) { _eps = new_eps; }
+
+    // Copy/Move operators
+
+    FUNCTION_TEMPLATE_3D
+    FUNCTION_TYPE_3D& FUNCTION_TYPE_3D::operator=(const Function& other) = default;
+
+    FUNCTION_TEMPLATE_3D
+    FUNCTION_TYPE_3D& FUNCTION_TYPE_3D::operator=(Function&& other) = default;
+
+    // Access operators
+
+    FUNCTION_TEMPLATE_3D
+    ResultT FUNCTION_TYPE_3D::operator()(ArgT1 x, ArgT2 y, ArgT3 z) const {
+        _check_initialized("function evaluation");
+
+        return _func(x, y, z);
+    }
+
+    FUNCTION_TEMPLATE_3D
+    ResultT FUNCTION_TYPE_3D::at(ArgT1 x, ArgT2 y, ArgT3 z) const {
+        return (*this)(x, y, z);
+    }
+
+    // Function currying
+
+    FUNCTION_TEMPLATE_3D
+    Function<ResultT, ArgT2, ArgT3> FUNCTION_TYPE_3D::bind_first(ArgT1 x_val) const {
+        _check_initialized("partial application");
+
+        return Function<ResultT, ArgT2, ArgT3>(
+            std::function<ResultT(ArgT2, ArgT3)>([this, x_val](ArgT2 y, ArgT3 z) { 
+                return (*this)(x_val, y, z); 
+            })
+        );
+    }
+
+    FUNCTION_TEMPLATE_3D
+    Function<ResultT, ArgT1, ArgT3> FUNCTION_TYPE_3D::bind_second(ArgT2 y_val) const {
+        _check_initialized("partial application");
+
+        return Function<ResultT, ArgT1, ArgT3>(
+            std::function<ResultT(ArgT1, ArgT3)>([this, y_val](ArgT1 x, ArgT3 z) { 
+                return (*this)(x, y_val, z); 
+            })
+        );
+    }
+
+    FUNCTION_TEMPLATE_3D
+    Function<ResultT, ArgT1, ArgT2> FUNCTION_TYPE_3D::bind_third(ArgT3 z_val) const {
+        _check_initialized("partial application");
+
+        return Function<ResultT, ArgT1, ArgT2>(
+            std::function<ResultT(ArgT1, ArgT2)>([this, z_val](ArgT1 x, ArgT2 y) { 
+                return (*this)(x, y, z_val); 
+            })
+        );
+    }
+
+    // Arithmetic operators with functions
+
+    FUNCTION_TEMPLATE_3D
+    FUNCTION_TYPE_3D FUNCTION_TYPE_3D::operator+(const Function& rhs) const {
+        _check_initialized("addition");
+        rhs._check_initialized("addition");
+        
+        return Function(std::function<ResultT(ArgT1, ArgT2, ArgT3)>(
+            [this, rhs](ArgT1 x, ArgT2 y, ArgT3 z) { 
+                return (*this)(x, y, z) + rhs(x, y, z); 
+            })
+        );
+    }
+
+    FUNCTION_TEMPLATE_3D
+    FUNCTION_TYPE_3D FUNCTION_TYPE_3D::operator-(const Function& rhs) const {
+        _check_initialized("subtraction");
+        rhs._check_initialized("subtraction");
+        
+        return Function(std::function<ResultT(ArgT1, ArgT2, ArgT3)>(
+            [this, rhs](ArgT1 x, ArgT2 y, ArgT3 z) { 
+                return (*this)(x, y, z) - rhs(x, y, z); 
+            })
+        );
+    }
+
+    FUNCTION_TEMPLATE_3D
+    FUNCTION_TYPE_3D FUNCTION_TYPE_3D::operator*(const Function& rhs) const {
+        _check_initialized("multiplication");
+        rhs._check_initialized("multiplication");
+        
+        return Function(std::function<ResultT(ArgT1, ArgT2, ArgT3)>(
+            [this, rhs](ArgT1 x, ArgT2 y, ArgT3 z) { 
+                return (*this)(x, y, z) * rhs(x, y, z); 
+            })
+        );
+    }
+
+    FUNCTION_TEMPLATE_3D
+    FUNCTION_TYPE_3D FUNCTION_TYPE_3D::operator/(const Function& rhs) const {
+        _check_initialized("division");
+        rhs._check_initialized("division");
+        
+        return Function(std::function<ResultT(ArgT1, ArgT2, ArgT3)>(
+            [this, rhs](ArgT1 x, ArgT2 y, ArgT3 z) { 
+                ResultT denominator = rhs(x, y, z);
+
+                if constexpr (std::is_floating_point_v<ResultT>) {
+                    if (std::abs(denominator) < _eps) {
+                        throw std::invalid_argument("Division by zero in function");
+                    }
+                } else {
+                    if (denominator == ResultT{0}) {
+                        throw std::invalid_argument("Division by zero in function");
+                    }
+                }
+
+                return (*this)(x, y, z) / denominator; 
+            })
+        );
+    }
+
+    FUNCTION_TEMPLATE_3D
+    FUNCTION_TYPE_3D& FUNCTION_TYPE_3D::operator+=(const Function& rhs) {
+        *this = *this + rhs;
+
+        return *this;
+    }
+
+    FUNCTION_TEMPLATE_3D
+    FUNCTION_TYPE_3D& FUNCTION_TYPE_3D::operator-=(const Function& rhs) {
+        *this = *this - rhs;
+
+        return *this;
+    }
+
+    FUNCTION_TEMPLATE_3D
+    FUNCTION_TYPE_3D& FUNCTION_TYPE_3D::operator*=(const Function& rhs) {
+        *this = *this * rhs;
+
+        return *this;
+    }
+
+    FUNCTION_TEMPLATE_3D
+    FUNCTION_TYPE_3D& FUNCTION_TYPE_3D::operator/=(const Function& rhs) {
+        *this = *this / rhs;
+
+        return *this;
+    }
+
+    // Arithmetic operators with scalars
+
+    FUNCTION_TEMPLATE_3D
+    FUNCTION_TYPE_3D FUNCTION_TYPE_3D::operator+(ResultT scalar) const {
+        _check_initialized("scalar addition");
+
+        return Function(std::function<ResultT(ArgT1, ArgT2, ArgT3)>(
+            [this, scalar](ArgT1 x, ArgT2 y, ArgT3 z) { 
+                return (*this)(x, y, z) + scalar; 
+            })
+        );
+    }
+
+    FUNCTION_TEMPLATE_3D
+    FUNCTION_TYPE_3D FUNCTION_TYPE_3D::operator-(ResultT scalar) const {
+        _check_initialized("scalar subtraction");
+
+        return Function(std::function<ResultT(ArgT1, ArgT2, ArgT3)>(
+            [this, scalar](ArgT1 x, ArgT2 y, ArgT3 z) { 
+                return (*this)(x, y, z) - scalar; 
+            })
+        );
+    }
+
+    FUNCTION_TEMPLATE_3D
+    FUNCTION_TYPE_3D FUNCTION_TYPE_3D::operator*(ResultT scalar) const {
+        _check_initialized("scalar multiplication");
+
+        return Function(std::function<ResultT(ArgT1, ArgT2, ArgT3)>(
+            [this, scalar](ArgT1 x, ArgT2 y, ArgT3 z) { 
+                return (*this)(x, y, z) * scalar; 
+            })
+        );
+    }
+
+    FUNCTION_TEMPLATE_3D
+    FUNCTION_TYPE_3D FUNCTION_TYPE_3D::operator/(ResultT scalar) const {
+        _check_initialized("scalar division");
+
+        if constexpr (std::is_floating_point_v<ResultT>) {
+            if (std::abs(scalar) < _eps) {
+                throw std::invalid_argument("Division by zero");
+            }
+        } else {
+            if (scalar == ResultT{0}) {
+                throw std::invalid_argument("Division by zero");
+            }
+        }
+
+        return Function(std::function<ResultT(ArgT1, ArgT2, ArgT3)>(
+            [this, scalar](ArgT1 x, ArgT2 y, ArgT3 z) { 
+                return (*this)(x, y, z) / scalar; 
+            })
+        );
+    }
+
+    FUNCTION_TEMPLATE_3D
+    FUNCTION_TYPE_3D& FUNCTION_TYPE_3D::operator+=(ResultT scalar) {
+        *this = *this + scalar;
+
+        return *this;
+    }
+
+    FUNCTION_TEMPLATE_3D
+    FUNCTION_TYPE_3D& FUNCTION_TYPE_3D::operator-=(ResultT scalar) {
+        *this = *this - scalar;
+
+        return *this;
+    }
+
+    FUNCTION_TEMPLATE_3D
+    FUNCTION_TYPE_3D& FUNCTION_TYPE_3D::operator*=(ResultT scalar) {
+        *this = *this * scalar;
+
+        return *this;
+    }
+
+    FUNCTION_TEMPLATE_3D
+    FUNCTION_TYPE_3D& FUNCTION_TYPE_3D::operator/=(ResultT scalar) {
+        *this = *this / scalar;
+
+        return *this;
+    }
+    
+    // Function composition
+
+    FUNCTION_TEMPLATE_3D
+    template<typename OuterResultT>
+    Function<OuterResultT, ArgT1, ArgT2, ArgT3> FUNCTION_TYPE_3D::compose(
+        const Function<OuterResultT, ResultT>& outer
+    ) const {
+        _check_initialized("composition");
+        
+        return Function<OuterResultT, ArgT1, ArgT2, ArgT3>(
+            [this, outer](ArgT1 x, ArgT2 y, ArgT3 z) { 
+                return outer((*this)(x, y, z)); 
+            }
+        );
+    }
+
+    FUNCTION_TEMPLATE_3D
+    template<typename CurveArgT>
+    Function<ResultT, CurveArgT> FUNCTION_TYPE_3D::compose_with_curve(
+        const Function<ArgT1, CurveArgT>& x_curve,
+        const Function<ArgT2, CurveArgT>& y_curve,
+        const Function<ArgT3, CurveArgT>& z_curve
+    ) const {
+        _check_initialized("curve composition");
+        
+        return Function<ResultT, CurveArgT>(
+            [this, x_curve, y_curve, z_curve](CurveArgT t) {
+                return (*this)(x_curve(t), y_curve(t), z_curve(t));
+            }
+        );
+    }
+
+    // Calculus operators
+
+    // Calculus operators
+
+    FUNCTION_TEMPLATE_3D
+    std::enable_if_t<std::is_floating_point_v<ResultT>, Function<ResultT, ArgT1, ArgT2, ArgT3>>
+    FUNCTION_TYPE_3D::partial_derivative_x(ArgT1 h) const {
+        _check_initialized("partial derivative x");
+        
+        return FUNCTION_TYPE_3D(
+            [this, h](ArgT1 x, ArgT2 y, ArgT3 z) { 
+                return ((*this)(x + h, y, z) - (*this)(x - h, y, z)) / (2 * h); 
+            }
+        );
+    }
+
+    FUNCTION_TEMPLATE_3D
+    std::enable_if_t<std::is_floating_point_v<ResultT>, Function<ResultT, ArgT1, ArgT2, ArgT3>>
+    FUNCTION_TYPE_3D::partial_derivative_y(ArgT2 h) const {
+        _check_initialized("partial derivative y");
+        
+        return FUNCTION_TYPE_3D(
+            [this, h](ArgT1 x, ArgT2 y, ArgT3 z) { 
+                return ((*this)(x, y + h, z) - (*this)(x, y - h, z)) / (2 * h); 
+            }
+        );
+    }
+
+    FUNCTION_TEMPLATE_3D
+    std::enable_if_t<std::is_floating_point_v<ResultT>, Function<ResultT, ArgT1, ArgT2, ArgT3>>
+    FUNCTION_TYPE_3D::partial_derivative_z(ArgT3 h) const {
+        _check_initialized("partial derivative z");
+        
+        return FUNCTION_TYPE_3D(
+            [this, h](ArgT1 x, ArgT2 y, ArgT3 z) { 
+                return ((*this)(x, y, z + h) - (*this)(x, y, z - h)) / (2 * h); 
+            }
+        );
+    }
+
+    FUNCTION_TEMPLATE_3D
+    std::enable_if_t<std::is_floating_point_v<ResultT>, ResultT>
+    FUNCTION_TYPE_3D::definite_integral(
+        ArgT1 a1, ArgT1 b1,
+        ArgT2 a2, ArgT2 b2, 
+        ArgT3 a3, ArgT3 b3,
+        size_t n1, size_t n2, size_t n3
+    ) const {
+        _check_initialized("triple integration");
+
+        if (n1 == 0 || n2 == 0 || n3 == 0) {
+            throw std::invalid_argument("Number of intervals must be positive");
+        }
+
+        if (n1 % 2 != 0) { n1++; }
+        if (n2 % 2 != 0) { n2++; }
+        if (n3 % 2 != 0) { n3++; }
+
+        ArgT1 h1 = (b1 - a1) / n1;
+        ArgT2 h2 = (b2 - a2) / n2;
+        ArgT3 h3 = (b3 - a3) / n3;
+        
+        ResultT sum = 0;
+
+        for (size_t i = 0; i <= n1; i++) {
+            ArgT1 x = a1 + i * h1;
+
+            double coeff_x = 1.0;
+            
+            if (i > 0 && i < n1) {
+                coeff_x = (i % 2 == 0) ? 2.0 : 4.0;
+            }
+            
+            for (size_t j = 0; j <= n2; j++) {
+                ArgT2 y = a2 + j * h2;
+
+                double coeff_y = 1.0;
+                
+                if (j > 0 && j < n2) {
+                    coeff_y = (j % 2 == 0) ? 2.0 : 4.0;
+                }
+                
+                for (size_t k = 0; k <= n3; k++) {
+                    ArgT3 z = a3 + k * h3;
+
+                    double coeff_z = 1.0;
+                    
+                    if (k > 0 && k < n3) {
+                        coeff_z = (k % 2 == 0) ? 2.0 : 4.0;
+                    }
+                    
+                    sum += coeff_x * coeff_y * coeff_z * (*this)(x, y, z);
+                }
+            }
+        }
+        
+        return sum * (h1 / 3.0) * (h2 / 3.0) * (h3 / 3.0);
+    }
+
+    FUNCTION_TEMPLATE_3D
+    std::enable_if_t<
+        std::is_floating_point_v<ResultT>, 
+        std::tuple<
+            Function<ResultT, ArgT1, ArgT2, ArgT3>, 
+            Function<ResultT, ArgT1, ArgT2, ArgT3>,
+            Function<ResultT, ArgT1, ArgT2, ArgT3>
+        >
+    >
+    FUNCTION_TYPE_3D::gradient(ArgT1 hx, ArgT2 hy, ArgT3 hz) const {
+        _check_initialized("gradient");
+        
+        auto df_dx = partial_derivative_x(hx);
+        auto df_dy = partial_derivative_y(hy);
+        auto df_dz = partial_derivative_z(hz);
+        
+        return std::make_tuple(df_dx, df_dy, df_dz);
+    }
+
+    // Functional properties
+
+    FUNCTION_TEMPLATE_3D
+    std::enable_if_t<std::is_floating_point_v<ResultT>, ResultT>
+    FUNCTION_TYPE_3D::norm(
+        ArgT1 a1, ArgT1 b1,
+        ArgT2 a2, ArgT2 b2,
+        ArgT3 a3, ArgT3 b3, 
+        size_t n1, size_t n2, size_t n3
+    ) const {
+        _check_initialized("norm calculation");
+        
+        if (n1 == 0 || n2 == 0 || n3 == 0) {
+            throw std::invalid_argument("Number of intervals must be positive");
+        }
+        
+        ArgT1 h1 = (b1 - a1) / n1;
+        ArgT2 h2 = (b2 - a2) / n2;
+        ArgT3 h3 = (b3 - a3) / n3;
+        
+        ResultT sum = 0;
+        
+        for (size_t i = 0; i <= n1; i++) {
+            ArgT1 x = a1 + i * h1;
+            double coeff_x = (i == 0 || i == n1) ? 0.5 : 1.0;
+            
+            for (size_t j = 0; j <= n2; j++) {
+                ArgT2 y = a2 + j * h2;
+                double coeff_y = (j == 0 || j == n2) ? 0.5 : 1.0;
+                
+                for (size_t k = 0; k <= n3; k++) {
+                    ArgT3 z = a3 + k * h3;
+                    double coeff_z = (k == 0 || k == n3) ? 0.5 : 1.0;
+                    
+                    ResultT f_val = (*this)(x, y, z);
+                    sum += coeff_x * coeff_y * coeff_z * f_val * f_val;
+                }
+            }
+        }
+        
+        return std::sqrt(sum * h1 * h2 * h3);
+    }
+
+    FUNCTION_TEMPLATE_3D
+    std::enable_if_t<std::is_floating_point_v<ResultT>, ResultT>
+    FUNCTION_TYPE_3D::maximum(
+        ArgT1 a1, ArgT1 b1,
+        ArgT2 a2, ArgT2 b2,
+        ArgT3 a3, ArgT3 b3,
+        size_t n1, size_t n2, size_t n3
+    ) const {
+        _check_initialized("maximum finding");
+        
+        if (n1 == 0 || n2 == 0 || n3 == 0) {
+            throw std::invalid_argument("Number of intervals must be positive");
+        }
+        
+        ArgT1 h1 = (b1 - a1) / n1;
+        ArgT2 h2 = (b2 - a2) / n2;
+        ArgT3 h3 = (b3 - a3) / n3;
+        
+        ResultT max_val = (*this)(a1, a2, a3);
+        
+        for (size_t i = 0; i <= n1; i++) {
+            ArgT1 x = a1 + i * h1;
+            
+            for (size_t j = 0; j <= n2; j++) {
+                ArgT2 y = a2 + j * h2;
+                
+                for (size_t k = 0; k <= n3; k++) {
+                    ArgT3 z = a3 + k * h3;
+                    ResultT val = (*this)(x, y, z);
+                    if (val > max_val) {
+                        max_val = val;
+                    }
+                }
+            }
+        }
+        
+        return max_val;
+    }
+
+    FUNCTION_TEMPLATE_3D
+    std::enable_if_t<std::is_floating_point_v<ResultT>, ResultT>
+    FUNCTION_TYPE_3D::minimum(
+        ArgT1 a1, ArgT1 b1,
+        ArgT2 a2, ArgT2 b2,
+        ArgT3 a3, ArgT3 b3,
+        size_t n1, size_t n2, size_t n3
+    ) const {
+        _check_initialized("minimum finding");
+        
+        if (n1 == 0 || n2 == 0 || n3 == 0) {
+            throw std::invalid_argument("Number of intervals must be positive");
+        }
+        
+        ArgT1 h1 = (b1 - a1) / n1;
+        ArgT2 h2 = (b2 - a2) / n2;
+        ArgT3 h3 = (b3 - a3) / n3;
+        
+        ResultT min_val = (*this)(a1, a2, a3);
+        
+        for (size_t i = 0; i <= n1; i++) {
+            ArgT1 x = a1 + i * h1;
+            
+            for (size_t j = 0; j <= n2; j++) {
+                ArgT2 y = a2 + j * h2;
+                
+                for (size_t k = 0; k <= n3; k++) {
+                    ArgT3 z = a3 + k * h3;
+                    ResultT val = (*this)(x, y, z);
+                    if (val < min_val) {
+                        min_val = val;
+                    }
+                }
+            }
+        }
+        
+        return min_val;
+    }
+
+    // Functional analysis
+
+    FUNCTION_TEMPLATE_3D
+    std::enable_if_t<std::is_floating_point_v<ResultT>, bool>
+    FUNCTION_TYPE_3D::is_continuous(
+        ArgT1 a1, ArgT1 b1,
+        ArgT2 a2, ArgT2 b2,
+        ArgT3 a3, ArgT3 b3,
+        size_t n1, size_t n2, size_t n3
+    ) const {
+        _check_initialized("continuity check");
+
+        ArgT1 h1 = (b1 - a1) / n1;
+        ArgT2 h2 = (b2 - a2) / n2;
+        ArgT3 h3 = (b3 - a3) / n3;
+
+        for (size_t i = 0; i < n1; i++) {
+            ArgT1 x1 = a1 + i * h1;
+            ArgT1 x2 = a1 + (i + 1) * h1;
+            
+            for (size_t j = 0; j < n2; j++) {
+                ArgT2 y1 = a2 + j * h2;
+                ArgT2 y2 = a2 + (j + 1) * h2;
+                
+                for (size_t k = 0; k < n3; k++) {
+                    ArgT3 z1 = a3 + k * h3;
+                    ArgT3 z2 = a3 + (k + 1) * h3;
+
+                    ResultT diff_x = std::abs((*this)(x2, y1, z1) - (*this)(x1, y1, z1));
+                    ResultT diff_y = std::abs((*this)(x1, y2, z1) - (*this)(x1, y1, z1));
+                    ResultT diff_z = std::abs((*this)(x1, y1, z2) - (*this)(x1, y1, z1));
+
+                    ResultT base_val = std::abs((*this)(x1, y1, z1));
+                    ResultT threshold = std::max(ResultT(1.0), base_val) * 0.1;
+                    
+                    if (diff_x > threshold || diff_y > threshold || diff_z > threshold) {
+                        return false;
+                    }
+                }
+            }
+        }
+        
+        return true;
+    }
+
+    // Static methods
+
+    FUNCTION_TEMPLATE_3D
+    FUNCTION_TYPE_3D FUNCTION_TYPE_3D::constant(ResultT value) {
+        return Function(std::function<ResultT(ArgT1, ArgT2, ArgT3)>(
+            [value](ArgT1 x, ArgT2 y, ArgT3 z) { return value; })
+        );
+    }
+
+    FUNCTION_TEMPLATE_3D
+    FUNCTION_TYPE_3D FUNCTION_TYPE_3D::trilinear(
+        ResultT a, ResultT b, ResultT c, ResultT d, 
+        ResultT e, ResultT f, ResultT g, ResultT h
+    ) {
+        return Function(std::function<ResultT(ArgT1, ArgT2, ArgT3)>(
+            [a, b, c, d, e, f, g, h](ArgT1 x, ArgT2 y, ArgT3 z) { 
+                return a * x * y * z + b * x * y + c * x * z + d * y * z + e * x + f * y + g * z + h; 
+            })
+        );
+    }
+
+    FUNCTION_TEMPLATE_3D
+    FUNCTION_TYPE_3D FUNCTION_TYPE_3D::gaussian(
+        ResultT sigma_x, ResultT sigma_y, ResultT sigma_z
+    ) {
+        return Function(std::function<ResultT(ArgT1, ArgT2, ArgT3)>(
+            [sigma_x, sigma_y, sigma_z](ArgT1 x, ArgT2 y, ArgT3 z) { 
+                return std::exp(
+                    - (x * x) / (2 * sigma_x * sigma_x) - 
+                    (y * y) / (2 * sigma_y * sigma_y) - 
+                    (z * z) / (2 * sigma_z * sigma_z)
+                ); 
+            })
+        );
+    }
+
+    FUNCTION_TEMPLATE_3D
+    FUNCTION_TYPE_3D FUNCTION_TYPE_3D::from_function_ptr(ResultT (*func)(ArgT1, ArgT2, ArgT3)) {
+        return Function(std::function<ResultT(ArgT1, ArgT2, ArgT3)>(func));
+    }
+
+    // Friend methods
+
+    FUNCTION_TEMPLATE_3D
+    std::ostream& operator<<(std::ostream& os, const Function<ResultT, ArgT1, ArgT2, ArgT3>& f) {
+        if (f.is_initialized()) {
+            os << "Function<" << typeid(ResultT).name() 
+            << "(" << typeid(ArgT1).name() << ", " << typeid(ArgT2).name() 
+            << ", " << typeid(ArgT3).name() << ")>[initialized]";
+        } else {
+            os << "Function<" << typeid(ResultT).name() 
+            << "(" << typeid(ArgT1).name() << ", " << typeid(ArgT2).name() 
+            << ", " << typeid(ArgT3).name() << ")>[uninitialized]";
         }
 
         return os;
