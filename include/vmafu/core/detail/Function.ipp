@@ -233,7 +233,7 @@ namespace vmafu {
     // Function composition
 
     FUNCTION_TEMPLATE_1D
-    template<typename OuterResultT>
+    template <typename OuterResultT>
     Function<OuterResultT, ArgT> FUNCTION_TYPE_1D::compose(
         const Function<OuterResultT, ResultT>& outer
     ) const {
@@ -247,7 +247,7 @@ namespace vmafu {
     }
 
     FUNCTION_TEMPLATE_1D
-    template<typename CurveArgT>
+    template <typename CurveArgT>
     Function<ResultT, CurveArgT> FUNCTION_TYPE_1D::compose_with_curve(
         const Function<ArgT, CurveArgT>& x_curve
     ) const {
@@ -883,7 +883,7 @@ namespace vmafu {
     // Function composition
 
     FUNCTION_TEMPLATE_2D
-    template<typename OuterResultT>
+    template <typename OuterResultT>
     Function<OuterResultT, ArgT1, ArgT2> FUNCTION_TYPE_2D::compose(
         const Function<OuterResultT, ResultT>& outer
     ) const {
@@ -897,7 +897,7 @@ namespace vmafu {
     }
 
     FUNCTION_TEMPLATE_2D
-    template<typename CurveArgT>
+    template <typename CurveArgT>
     Function<ResultT, CurveArgT> FUNCTION_TYPE_2D::compose_with_curve(
         const Function<ArgT1, CurveArgT>& x_curve,
         const Function<ArgT2, CurveArgT>& y_curve
@@ -1566,7 +1566,7 @@ namespace vmafu {
     // Function composition
 
     FUNCTION_TEMPLATE_3D
-    template<typename OuterResultT>
+    template <typename OuterResultT>
     Function<OuterResultT, ArgT1, ArgT2, ArgT3> FUNCTION_TYPE_3D::compose(
         const Function<OuterResultT, ResultT>& outer
     ) const {
@@ -1580,7 +1580,7 @@ namespace vmafu {
     }
 
     FUNCTION_TEMPLATE_3D
-    template<typename CurveArgT>
+    template <typename CurveArgT>
     Function<ResultT, CurveArgT> FUNCTION_TYPE_3D::compose_with_curve(
         const Function<ArgT1, CurveArgT>& x_curve,
         const Function<ArgT2, CurveArgT>& y_curve,

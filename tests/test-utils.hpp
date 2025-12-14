@@ -26,7 +26,7 @@ namespace vmafu_test {
                 _current_test.clear();
             }
 
-            template<typename T, typename U>
+            template <typename T, typename U>
             void assert_equal(const T& actual, const U& expected, const std::string& message = "") {
                 if (actual == expected) {
                     _passed++;
@@ -60,7 +60,7 @@ namespace vmafu_test {
                 }
             }
 
-            template<typename T>
+            template <typename T>
             void assert_almost_equal(T actual, T expected, T epsilon, const std::string& message = "") {
                 if (std::abs(actual - expected) < epsilon) {
                     _passed++;
@@ -87,7 +87,7 @@ namespace vmafu_test {
                 assert_true(!condition, message);
             }
 
-            template<typename ExceptionType>
+            template <typename ExceptionType>
             void assert_throws(const std::function<void()>& func, const std::string& message = "") {
                 bool caught = false;
                 try {

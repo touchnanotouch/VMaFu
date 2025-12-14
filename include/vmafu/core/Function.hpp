@@ -86,10 +86,10 @@ namespace vmafu {
 
             // Function composition
 
-            template<typename OuterResultT>
+            template <typename OuterResultT>
             Function<OuterResultT, ArgT> compose(const Function<OuterResultT, ResultT>& outer) const;
 
-            template<typename CurveArgT>
+            template <typename CurveArgT>
             Function<ResultT, CurveArgT> compose_with_curve(
                 const Function<ArgT, CurveArgT>& x_curve
             ) const;
@@ -231,12 +231,12 @@ namespace vmafu {
 
             // Function composition
 
-            template<typename OuterResultT>
+            template <typename OuterResultT>
             Function<OuterResultT, ArgT1, ArgT2> compose(
                 const Function<OuterResultT, ResultT>& outer
             ) const;
 
-            template<typename CurveArgT>
+            template <typename CurveArgT>
             Function<ResultT, CurveArgT> compose_with_curve(
                 const Function<ArgT1, CurveArgT>& x_curve,
                 const Function<ArgT2, CurveArgT>& y_curve
@@ -299,7 +299,7 @@ namespace vmafu {
             friend std::ostream& operator<<(std::ostream& os, const Function<ResultT, ArgT1, ArgT2>& f);
         };
 
-    // Function 3-d class (basic implementation, code plugs, propably not working)
+    // Function 3-d class
 
     template <typename ResultT, typename ArgT1, typename ArgT2, typename ArgT3>
     class Function<ResultT, ArgT1, ArgT2, ArgT3> {
@@ -374,12 +374,12 @@ namespace vmafu {
             
             // Function composition
 
-            template<typename OuterResultT>
+            template <typename OuterResultT>
             Function<OuterResultT, ArgT1, ArgT2, ArgT3> compose(
                 const Function<OuterResultT, ResultT>& outer
             ) const;
 
-            template<typename CurveArgT>
+            template <typename CurveArgT>
             Function<ResultT, CurveArgT> compose_with_curve(
                 const Function<ArgT1, CurveArgT>& x_curve,
                 const Function<ArgT2, CurveArgT>& y_curve,
@@ -481,15 +481,15 @@ namespace vmafu {
     template <typename ResultT, typename ArgT>
     Function<ResultT, ArgT> operator/(ResultT scalar, const Function<ResultT, ArgT>& func);
 
-    // Allias for simplicity
+    // Aliases for simplicity
 
-    template<typename T>
+    template <typename T>
     using Function1D = Function<T, T>;
     
-    template<typename T>
+    template <typename T>
     using Function2D = Function<T, T, T>;
     
-    template<typename T>  
+    template <typename T>  
     using Function3D = Function<T, T, T, T>;
 }
 
