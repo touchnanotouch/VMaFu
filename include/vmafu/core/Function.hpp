@@ -7,7 +7,6 @@
 #include <functional>
 #include <ostream>
 #include <stdexcept>
-#include <initializer_list>
 
 #include "Vector.hpp"
 

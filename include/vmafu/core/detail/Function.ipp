@@ -79,9 +79,9 @@ namespace vmafu {
         _check_initialized("addition");
         rhs._check_initialized("addition");
         
-        return Function(std::function<ResultT(ArgT)>([this, rhs](ArgT x) { 
+        return Function([this, rhs](ArgT x) -> ResultT{ 
             return (*this)(x) + rhs(x); 
-        }));
+        });
     }
 
     FUNCTION_TEMPLATE_1D
@@ -89,9 +89,9 @@ namespace vmafu {
         _check_initialized("subtraction");
         rhs._check_initialized("subtraction");
         
-        return Function(std::function<ResultT(ArgT)>([this, rhs](ArgT x) { 
+        return Function([this, rhs](ArgT x) -> ResultT { 
             return (*this)(x) - rhs(x); 
-        }));
+        });
     }
 
     FUNCTION_TEMPLATE_1D
@@ -99,9 +99,9 @@ namespace vmafu {
         _check_initialized("multiplication");
         rhs._check_initialized("multiplication");
         
-        return Function(std::function<ResultT(ArgT)>([this, rhs](ArgT x) { 
+        return Function([this, rhs](ArgT x) -> ResultT { 
             return (*this)(x) * rhs(x); 
-        }));
+        });
     }
 
     FUNCTION_TEMPLATE_1D
@@ -109,7 +109,7 @@ namespace vmafu {
         _check_initialized("division");
         rhs._check_initialized("division");
         
-        return Function(std::function<ResultT(ArgT)>([this, rhs](ArgT x) { 
+        return Function([this, rhs](ArgT x) -> ResultT { 
             ResultT denominator = rhs(x);
 
             if constexpr (std::is_floating_point_v<ResultT>) {
@@ -123,7 +123,7 @@ namespace vmafu {
             }
 
             return (*this)(x) / denominator; 
-        }));
+        });
     }
 
     FUNCTION_TEMPLATE_1D
@@ -160,27 +160,27 @@ namespace vmafu {
     FUNCTION_TYPE_1D FUNCTION_TYPE_1D::operator+(ResultT scalar) const {
         _check_initialized("scalar addition");
 
-        return Function(std::function<ResultT(ArgT)>([this, scalar](ArgT x) { 
+        return Function([this, scalar](ArgT x) -> ResultT { 
             return (*this)(x) + scalar; 
-        }));
+        });
     }
 
     FUNCTION_TEMPLATE_1D
     FUNCTION_TYPE_1D FUNCTION_TYPE_1D::operator-(ResultT scalar) const {
         _check_initialized("scalar subtraction");
 
-        return Function(std::function<ResultT(ArgT)>([this, scalar](ArgT x) { 
+        return Function([this, scalar](ArgT x) -> ResultT { 
             return (*this)(x) - scalar; 
-        }));
+        });
     }
 
     FUNCTION_TEMPLATE_1D
     FUNCTION_TYPE_1D FUNCTION_TYPE_1D::operator*(ResultT scalar) const {
         _check_initialized("scalar multiplication");
 
-        return Function(std::function<ResultT(ArgT)>([this, scalar](ArgT x) { 
+        return Function([this, scalar](ArgT x) -> ResultT { 
             return (*this)(x) * scalar; 
-        }));
+        });
     }
 
     FUNCTION_TEMPLATE_1D
@@ -197,9 +197,9 @@ namespace vmafu {
             }
         }
 
-        return Function(std::function<ResultT(ArgT)>([this, scalar](ArgT x) { 
+        return Function([this, scalar](ArgT x) -> ResultT { 
             return (*this)(x) / scalar; 
-        }));
+        });
     }
 
     FUNCTION_TEMPLATE_1D
@@ -239,11 +239,9 @@ namespace vmafu {
     ) const {
         _check_initialized("composition");
         
-        return Function<OuterResultT, ArgT>(
-            std::function<OuterResultT(ArgT)>([this, outer](ArgT x) { 
-                return outer((*this)(x));
-            })
-        );
+        return Function<OuterResultT, ArgT>([this, outer](ArgT x) -> ResultT { 
+            return outer((*this)(x));
+        });
     }
 
     FUNCTION_TEMPLATE_1D
@@ -251,11 +249,9 @@ namespace vmafu {
     Function<ResultT, CurveArgT> FUNCTION_TYPE_1D::compose_with_curve(
         const Function<ArgT, CurveArgT>& x_curve
     ) const {
-        return Function<ResultT, CurveArgT>(
-            [this, x_curve](CurveArgT t) {
-                return (*this)(x_curve(t));
-            }
-        );
+        return Function<ResultT, CurveArgT>([this, x_curve](CurveArgT t) -> ResultT {
+            return (*this)(x_curve(t));
+        });
     }
 
     // Calculus operators
@@ -265,9 +261,9 @@ namespace vmafu {
     FUNCTION_TYPE_1D::derivative(ArgT h) const {
         _check_initialized("derivative");
 
-        return Function(std::function<ResultT(ArgT)>([this, h](ArgT x) { 
+        return Function([this, h](ArgT x) -> ResultT { 
             return ((*this)(x + h) - (*this)(x - h)) / (2 * h); 
-        }));
+        });
     }
 
     FUNCTION_TEMPLATE_1D
@@ -301,7 +297,7 @@ namespace vmafu {
 
         if (n % 2 != 0) { n++; }
         
-        return Function(std::function<ResultT(ArgT)>([this, c, n](ArgT x) {
+        return Function([this, c, n](ArgT x) -> ResultT {
             if (x == 0) {
                 return c;
             }
@@ -319,7 +315,7 @@ namespace vmafu {
             }
             
             return sum * h / 3.0 + c;
-        }));
+        });
     }
 
     // Functional properties
@@ -521,17 +517,19 @@ namespace vmafu {
 
     FUNCTION_TEMPLATE_1D
     FUNCTION_TYPE_1D FUNCTION_TYPE_1D::constant(ResultT value) {
-        return Function(std::function<ResultT(ArgT)>([value](ArgT x) { return value; }));
+        return Function([value](ArgT x) -> ResultT { return value; });
     }
 
     FUNCTION_TEMPLATE_1D
     FUNCTION_TYPE_1D FUNCTION_TYPE_1D::linear(ResultT intercept, ResultT slope) {
-        return Function(std::function<ResultT(ArgT)>([slope, intercept](ArgT x) { return slope * x + intercept; }));
+        return Function([slope, intercept](ArgT x) -> ResultT {
+            return slope * x + intercept;
+        });
     }
 
     FUNCTION_TEMPLATE_1D
     FUNCTION_TYPE_1D FUNCTION_TYPE_1D::polynomial(const Vector<ResultT>& coefficients) {
-        return Function(std::function<ResultT(ArgT)>([coefficients](ArgT x) {
+        return Function([coefficients](ArgT x) -> ResultT {
             ResultT result = 0;
             ResultT power = 1;
 
@@ -541,40 +539,40 @@ namespace vmafu {
             }
 
             return result;
-        }));
+        });
     }
 
     FUNCTION_TEMPLATE_1D
     FUNCTION_TYPE_1D FUNCTION_TYPE_1D::exponential(ResultT base) {
-        return Function(std::function<ResultT(ArgT)>([base](ArgT x) { 
+        return Function([base](ArgT x) -> ResultT { 
             return std::pow(base, x); 
-        }));
+        });
     }
 
     FUNCTION_TEMPLATE_1D
     FUNCTION_TYPE_1D FUNCTION_TYPE_1D::logarithmic(ResultT base) {
-        return Function(std::function<ResultT(ArgT)>([base](ArgT x) { 
+        return Function([base](ArgT x) -> ResultT { 
             if (x <= 0) {
                 throw std::invalid_argument("Logarithm undefined for non-positive values");
             }
 
             return std::log(x) / std::log(base); 
-        }));
+        });
     }
 
     FUNCTION_TEMPLATE_1D
     FUNCTION_TYPE_1D FUNCTION_TYPE_1D::trigonometric_sin() {
-        return Function(std::function<ResultT(ArgT)>([](ArgT x) { return std::sin(x); }));
+        return Function([](ArgT x) -> ResultT { return std::sin(x); });
     }
 
     FUNCTION_TEMPLATE_1D
     FUNCTION_TYPE_1D FUNCTION_TYPE_1D::trigonometric_cos() {
-        return Function(std::function<ResultT(ArgT)>([](ArgT x) { return std::cos(x); }));
+        return Function([](ArgT x) -> ResultT { return std::cos(x); });
     }
 
     FUNCTION_TEMPLATE_1D
     FUNCTION_TYPE_1D FUNCTION_TYPE_1D::trigonometric_tan() {
-        return Function(std::function<ResultT(ArgT)>([](ArgT x) { return std::tan(x); }));
+        return Function([](ArgT x) -> ResultT { return std::tan(x); });
     }
 
     FUNCTION_TEMPLATE_1D
@@ -688,22 +686,18 @@ namespace vmafu {
     Function<ResultT, ArgT2> FUNCTION_TYPE_2D::bind_first(ArgT1 x_val) const {
         _check_initialized("partial application");
 
-        return Function<ResultT, ArgT2>(
-            std::function<ResultT(ArgT2)>([this, x_val](ArgT2 y) { 
-                return (*this)(x_val, y); 
-            })
-        );
+        return Function<ResultT, ArgT2>([this, x_val](ArgT2 y) -> ResultT { 
+            return (*this)(x_val, y); 
+        });
     }
 
     FUNCTION_TEMPLATE_2D
     Function<ResultT, ArgT1> FUNCTION_TYPE_2D::bind_second(ArgT2 y_val) const {
         _check_initialized("partial application");
 
-        return Function<ResultT, ArgT1>(
-            std::function<ResultT(ArgT1)>([this, y_val](ArgT1 x) { 
-                return (*this)(x, y_val); 
-            })
-        );
+        return Function<ResultT, ArgT1>([this, y_val](ArgT1 x) -> ResultT { 
+            return (*this)(x, y_val); 
+        });
     }
 
     // Arithmetic operators with functions
@@ -713,11 +707,9 @@ namespace vmafu {
         _check_initialized("addition");
         rhs._check_initialized("addition");
         
-        return Function(std::function<ResultT(ArgT1, ArgT2)>(
-            [this, rhs](ArgT1 x, ArgT2 y) { 
-                return (*this)(x, y) + rhs(x, y); 
-            })
-        );
+        return Function([this, rhs](ArgT1 x, ArgT2 y) -> ResultT { 
+            return (*this)(x, y) + rhs(x, y); 
+        });
     }
 
     FUNCTION_TEMPLATE_2D
@@ -725,11 +717,9 @@ namespace vmafu {
         _check_initialized("subtraction");
         rhs._check_initialized("subtraction");
         
-        return Function(std::function<ResultT(ArgT1, ArgT2)>(
-            [this, rhs](ArgT1 x, ArgT2 y) { 
-                return (*this)(x, y) - rhs(x, y); 
-            })
-        );
+        return Function([this, rhs](ArgT1 x, ArgT2 y) -> ResultT { 
+            return (*this)(x, y) - rhs(x, y); 
+        });
     }
 
     FUNCTION_TEMPLATE_2D
@@ -737,11 +727,9 @@ namespace vmafu {
         _check_initialized("multiplication");
         rhs._check_initialized("multiplication");
         
-        return Function(std::function<ResultT(ArgT1, ArgT2)>(
-            [this, rhs](ArgT1 x, ArgT2 y) { 
-                return (*this)(x, y) * rhs(x, y); 
-            })
-        );
+        return Function([this, rhs](ArgT1 x, ArgT2 y) -> ResultT { 
+            return (*this)(x, y) * rhs(x, y); 
+        });
     }
 
     FUNCTION_TEMPLATE_2D
@@ -749,23 +737,21 @@ namespace vmafu {
         _check_initialized("division");
         rhs._check_initialized("division");
         
-        return Function(std::function<ResultT(ArgT1, ArgT2)>(
-            [this, rhs](ArgT1 x, ArgT2 y) { 
-                ResultT denominator = rhs(x, y);
+        return Function([this, rhs](ArgT1 x, ArgT2 y) -> ResultT { 
+            ResultT denominator = rhs(x, y);
 
-                if constexpr (std::is_floating_point_v<ResultT>) {
-                    if (std::abs(denominator) < _eps) {
-                        throw std::invalid_argument("Division by zero in function");
-                    }
-                } else {
-                    if (denominator == ResultT{0}) {
-                        throw std::invalid_argument("Division by zero in function");
-                    }
+            if constexpr (std::is_floating_point_v<ResultT>) {
+                if (std::abs(denominator) < _eps) {
+                    throw std::invalid_argument("Division by zero in function");
                 }
+            } else {
+                if (denominator == ResultT{0}) {
+                    throw std::invalid_argument("Division by zero in function");
+                }
+            }
 
-                return (*this)(x, y) / denominator; 
-            })
-        );
+            return (*this)(x, y) / denominator; 
+        });
     }
 
     FUNCTION_TEMPLATE_2D
@@ -802,33 +788,27 @@ namespace vmafu {
     FUNCTION_TYPE_2D FUNCTION_TYPE_2D::operator+(ResultT scalar) const {
         _check_initialized("scalar addition");
 
-        return Function(std::function<ResultT(ArgT1, ArgT2)>(
-            [this, scalar](ArgT1 x, ArgT2 y) { 
-                return (*this)(x, y) + scalar; 
-            })
-        );
+        return Function([this, scalar](ArgT1 x, ArgT2 y) -> ResultT { 
+            return (*this)(x, y) + scalar; 
+        });
     }
 
     FUNCTION_TEMPLATE_2D
     FUNCTION_TYPE_2D FUNCTION_TYPE_2D::operator-(ResultT scalar) const {
         _check_initialized("scalar subtraction");
 
-        return Function(std::function<ResultT(ArgT1, ArgT2)>(
-            [this, scalar](ArgT1 x, ArgT2 y) { 
-                return (*this)(x, y) - scalar; 
-            })
-        );
+        return Function([this, scalar](ArgT1 x, ArgT2 y) -> ResultT { 
+            return (*this)(x, y) - scalar; 
+        });
     }
 
     FUNCTION_TEMPLATE_2D
     FUNCTION_TYPE_2D FUNCTION_TYPE_2D::operator*(ResultT scalar) const {
         _check_initialized("scalar multiplication");
 
-        return Function(std::function<ResultT(ArgT1, ArgT2)>(
-            [this, scalar](ArgT1 x, ArgT2 y) { 
-                return (*this)(x, y) * scalar; 
-            })
-        );
+        return Function([this, scalar](ArgT1 x, ArgT2 y) -> ResultT { 
+            return (*this)(x, y) * scalar; 
+        });
     }
 
     FUNCTION_TEMPLATE_2D
@@ -890,7 +870,7 @@ namespace vmafu {
         _check_initialized("composition");
         
         return Function<OuterResultT, ArgT1, ArgT2>(
-            [this, outer](ArgT1 x, ArgT2 y) {
+            [this, outer](ArgT1 x, ArgT2 y) -> ResultT {
                 return outer((*this)(x, y)); 
             }
         );
@@ -909,7 +889,7 @@ namespace vmafu {
         }
         
         return Function<ResultT, CurveArgT>(
-            [this, x_curve, y_curve](CurveArgT t) {
+            [this, x_curve, y_curve](CurveArgT t) -> ResultT {
                 return (*this)(x_curve(t), y_curve(t));
             }
         );
@@ -923,7 +903,7 @@ namespace vmafu {
         _check_initialized("partial derivative x");
         
         return FUNCTION_TYPE_2D(
-            [this, h](ArgT1 x, ArgT2 y) { 
+            [this, h](ArgT1 x, ArgT2 y) -> ResultT { 
                 return ((*this)(x + h, y) - (*this)(x - h, y)) / (2 * h); 
             }
         );
@@ -935,7 +915,7 @@ namespace vmafu {
         _check_initialized("partial derivative y");
         
         return FUNCTION_TYPE_2D(
-            [this, h](ArgT1 x, ArgT2 y) { 
+            [this, h](ArgT1 x, ArgT2 y) -> ResultT { 
                 return ((*this)(x, y + h) - (*this)(x, y - h)) / (2 * h); 
             }
         );
@@ -1248,27 +1228,21 @@ namespace vmafu {
 
     FUNCTION_TEMPLATE_2D
     FUNCTION_TYPE_2D FUNCTION_TYPE_2D::constant(ResultT value) {
-        return Function(std::function<ResultT(ArgT1, ArgT2)>(
-            [value](ArgT1 x, ArgT2 y) { return value; })
-        );
+        return Function([value](ArgT1 x, ArgT2 y) -> ResultT { return value; });
     }
 
     FUNCTION_TEMPLATE_2D
     FUNCTION_TYPE_2D FUNCTION_TYPE_2D::bilinear(ResultT a, ResultT b, ResultT c, ResultT d) {
-        return Function(std::function<ResultT(ArgT1, ArgT2)>(
-            [a, b, c, d](ArgT1 x, ArgT2 y) { 
-                return a * x * y + b * x + c * y + d; 
-            })
-        );
+        return Function([a, b, c, d](ArgT1 x, ArgT2 y) -> ResultT { 
+            return a * x * y + b * x + c * y + d; 
+        });
     }
 
     FUNCTION_TEMPLATE_2D
     FUNCTION_TYPE_2D FUNCTION_TYPE_2D::gaussian(ResultT sigma_x, ResultT sigma_y) {
-        return Function(std::function<ResultT(ArgT1, ArgT2)>(
-            [sigma_x, sigma_y](ArgT1 x, ArgT2 y) { 
-                return std::exp(-(x * x) / (2 * sigma_x * sigma_x) - (y * y) / (2 * sigma_y * sigma_y)); 
-            })
-        );
+        return Function([sigma_x, sigma_y](ArgT1 x, ArgT2 y) -> ResultT { 
+            return std::exp(-(x * x) / (2 * sigma_x * sigma_x) - (y * y) / (2 * sigma_y * sigma_y)); 
+        });
     }
 
     FUNCTION_TEMPLATE_2D
@@ -1360,33 +1334,27 @@ namespace vmafu {
     Function<ResultT, ArgT2, ArgT3> FUNCTION_TYPE_3D::bind_first(ArgT1 x_val) const {
         _check_initialized("partial application");
 
-        return Function<ResultT, ArgT2, ArgT3>(
-            std::function<ResultT(ArgT2, ArgT3)>([this, x_val](ArgT2 y, ArgT3 z) { 
-                return (*this)(x_val, y, z); 
-            })
-        );
+        return Function<ResultT, ArgT2, ArgT3>([this, x_val](ArgT2 y, ArgT3 z) -> ResultT { 
+            return (*this)(x_val, y, z); 
+        });
     }
 
     FUNCTION_TEMPLATE_3D
     Function<ResultT, ArgT1, ArgT3> FUNCTION_TYPE_3D::bind_second(ArgT2 y_val) const {
         _check_initialized("partial application");
 
-        return Function<ResultT, ArgT1, ArgT3>(
-            std::function<ResultT(ArgT1, ArgT3)>([this, y_val](ArgT1 x, ArgT3 z) { 
-                return (*this)(x, y_val, z); 
-            })
-        );
+        return Function<ResultT, ArgT1, ArgT3>([this, y_val](ArgT1 x, ArgT3 z) -> ResultT { 
+            return (*this)(x, y_val, z); 
+        });
     }
 
     FUNCTION_TEMPLATE_3D
     Function<ResultT, ArgT1, ArgT2> FUNCTION_TYPE_3D::bind_third(ArgT3 z_val) const {
         _check_initialized("partial application");
 
-        return Function<ResultT, ArgT1, ArgT2>(
-            std::function<ResultT(ArgT1, ArgT2)>([this, z_val](ArgT1 x, ArgT2 y) { 
-                return (*this)(x, y, z_val); 
-            })
-        );
+        return Function<ResultT, ArgT1, ArgT2>([this, z_val](ArgT1 x, ArgT2 y) -> ResultT { 
+            return (*this)(x, y, z_val); 
+        });
     }
 
     // Arithmetic operators with functions
@@ -1396,11 +1364,9 @@ namespace vmafu {
         _check_initialized("addition");
         rhs._check_initialized("addition");
         
-        return Function(std::function<ResultT(ArgT1, ArgT2, ArgT3)>(
-            [this, rhs](ArgT1 x, ArgT2 y, ArgT3 z) { 
-                return (*this)(x, y, z) + rhs(x, y, z); 
-            })
-        );
+        return Function([this, rhs](ArgT1 x, ArgT2 y, ArgT3 z) -> ResultT { 
+            return (*this)(x, y, z) + rhs(x, y, z); 
+        });
     }
 
     FUNCTION_TEMPLATE_3D
@@ -1408,11 +1374,9 @@ namespace vmafu {
         _check_initialized("subtraction");
         rhs._check_initialized("subtraction");
         
-        return Function(std::function<ResultT(ArgT1, ArgT2, ArgT3)>(
-            [this, rhs](ArgT1 x, ArgT2 y, ArgT3 z) { 
-                return (*this)(x, y, z) - rhs(x, y, z); 
-            })
-        );
+        return Function([this, rhs](ArgT1 x, ArgT2 y, ArgT3 z) -> ResultT { 
+            return (*this)(x, y, z) - rhs(x, y, z); 
+        });
     }
 
     FUNCTION_TEMPLATE_3D
@@ -1420,11 +1384,9 @@ namespace vmafu {
         _check_initialized("multiplication");
         rhs._check_initialized("multiplication");
         
-        return Function(std::function<ResultT(ArgT1, ArgT2, ArgT3)>(
-            [this, rhs](ArgT1 x, ArgT2 y, ArgT3 z) { 
-                return (*this)(x, y, z) * rhs(x, y, z); 
-            })
-        );
+        return Function([this, rhs](ArgT1 x, ArgT2 y, ArgT3 z) -> ResultT { 
+            return (*this)(x, y, z) * rhs(x, y, z); 
+        });
     }
 
     FUNCTION_TEMPLATE_3D
@@ -1432,23 +1394,21 @@ namespace vmafu {
         _check_initialized("division");
         rhs._check_initialized("division");
         
-        return Function(std::function<ResultT(ArgT1, ArgT2, ArgT3)>(
-            [this, rhs](ArgT1 x, ArgT2 y, ArgT3 z) { 
-                ResultT denominator = rhs(x, y, z);
+        return Function([this, rhs](ArgT1 x, ArgT2 y, ArgT3 z) -> ResultT { 
+            ResultT denominator = rhs(x, y, z);
 
-                if constexpr (std::is_floating_point_v<ResultT>) {
-                    if (std::abs(denominator) < _eps) {
-                        throw std::invalid_argument("Division by zero in function");
-                    }
-                } else {
-                    if (denominator == ResultT{0}) {
-                        throw std::invalid_argument("Division by zero in function");
-                    }
+            if constexpr (std::is_floating_point_v<ResultT>) {
+                if (std::abs(denominator) < _eps) {
+                    throw std::invalid_argument("Division by zero in function");
                 }
+            } else {
+                if (denominator == ResultT{0}) {
+                    throw std::invalid_argument("Division by zero in function");
+                }
+            }
 
-                return (*this)(x, y, z) / denominator; 
-            })
-        );
+            return (*this)(x, y, z) / denominator; 
+        });
     }
 
     FUNCTION_TEMPLATE_3D
@@ -1485,33 +1445,27 @@ namespace vmafu {
     FUNCTION_TYPE_3D FUNCTION_TYPE_3D::operator+(ResultT scalar) const {
         _check_initialized("scalar addition");
 
-        return Function(std::function<ResultT(ArgT1, ArgT2, ArgT3)>(
-            [this, scalar](ArgT1 x, ArgT2 y, ArgT3 z) { 
-                return (*this)(x, y, z) + scalar; 
-            })
-        );
+        return Function([this, scalar](ArgT1 x, ArgT2 y, ArgT3 z) -> ResultT { 
+            return (*this)(x, y, z) + scalar; 
+        });
     }
 
     FUNCTION_TEMPLATE_3D
     FUNCTION_TYPE_3D FUNCTION_TYPE_3D::operator-(ResultT scalar) const {
         _check_initialized("scalar subtraction");
 
-        return Function(std::function<ResultT(ArgT1, ArgT2, ArgT3)>(
-            [this, scalar](ArgT1 x, ArgT2 y, ArgT3 z) { 
-                return (*this)(x, y, z) - scalar; 
-            })
-        );
+        return Function([this, scalar](ArgT1 x, ArgT2 y, ArgT3 z) -> ResultT { 
+            return (*this)(x, y, z) - scalar; 
+        });
     }
 
     FUNCTION_TEMPLATE_3D
     FUNCTION_TYPE_3D FUNCTION_TYPE_3D::operator*(ResultT scalar) const {
         _check_initialized("scalar multiplication");
 
-        return Function(std::function<ResultT(ArgT1, ArgT2, ArgT3)>(
-            [this, scalar](ArgT1 x, ArgT2 y, ArgT3 z) { 
-                return (*this)(x, y, z) * scalar; 
-            })
-        );
+        return Function([this, scalar](ArgT1 x, ArgT2 y, ArgT3 z) -> ResultT { 
+            return (*this)(x, y, z) * scalar; 
+        });
     }
 
     FUNCTION_TEMPLATE_3D
@@ -1528,11 +1482,9 @@ namespace vmafu {
             }
         }
 
-        return Function(std::function<ResultT(ArgT1, ArgT2, ArgT3)>(
-            [this, scalar](ArgT1 x, ArgT2 y, ArgT3 z) { 
-                return (*this)(x, y, z) / scalar; 
-            })
-        );
+        return Function([this, scalar](ArgT1 x, ArgT2 y, ArgT3 z) -> ResultT { 
+            return (*this)(x, y, z) / scalar; 
+        });
     }
 
     FUNCTION_TEMPLATE_3D
@@ -1573,7 +1525,7 @@ namespace vmafu {
         _check_initialized("composition");
         
         return Function<OuterResultT, ArgT1, ArgT2, ArgT3>(
-            [this, outer](ArgT1 x, ArgT2 y, ArgT3 z) { 
+            [this, outer](ArgT1 x, ArgT2 y, ArgT3 z) -> ResultT { 
                 return outer((*this)(x, y, z)); 
             }
         );
@@ -1589,7 +1541,7 @@ namespace vmafu {
         _check_initialized("curve composition");
         
         return Function<ResultT, CurveArgT>(
-            [this, x_curve, y_curve, z_curve](CurveArgT t) {
+            [this, x_curve, y_curve, z_curve](CurveArgT t) -> ResultT {
                 return (*this)(x_curve(t), y_curve(t), z_curve(t));
             }
         );
@@ -1604,11 +1556,9 @@ namespace vmafu {
     FUNCTION_TYPE_3D::partial_derivative_x(ArgT1 h) const {
         _check_initialized("partial derivative x");
         
-        return FUNCTION_TYPE_3D(
-            [this, h](ArgT1 x, ArgT2 y, ArgT3 z) { 
-                return ((*this)(x + h, y, z) - (*this)(x - h, y, z)) / (2 * h); 
-            }
-        );
+        return FUNCTION_TYPE_3D([this, h](ArgT1 x, ArgT2 y, ArgT3 z) -> ResultT { 
+            return ((*this)(x + h, y, z) - (*this)(x - h, y, z)) / (2 * h); 
+        });
     }
 
     FUNCTION_TEMPLATE_3D
@@ -1616,11 +1566,9 @@ namespace vmafu {
     FUNCTION_TYPE_3D::partial_derivative_y(ArgT2 h) const {
         _check_initialized("partial derivative y");
         
-        return FUNCTION_TYPE_3D(
-            [this, h](ArgT1 x, ArgT2 y, ArgT3 z) { 
-                return ((*this)(x, y + h, z) - (*this)(x, y - h, z)) / (2 * h); 
-            }
-        );
+        return FUNCTION_TYPE_3D([this, h](ArgT1 x, ArgT2 y, ArgT3 z) -> ResultT { 
+            return ((*this)(x, y + h, z) - (*this)(x, y - h, z)) / (2 * h); 
+        });
     }
 
     FUNCTION_TEMPLATE_3D
@@ -1628,11 +1576,9 @@ namespace vmafu {
     FUNCTION_TYPE_3D::partial_derivative_z(ArgT3 h) const {
         _check_initialized("partial derivative z");
         
-        return FUNCTION_TYPE_3D(
-            [this, h](ArgT1 x, ArgT2 y, ArgT3 z) { 
-                return ((*this)(x, y, z + h) - (*this)(x, y, z - h)) / (2 * h); 
-            }
-        );
+        return FUNCTION_TYPE_3D([this, h](ArgT1 x, ArgT2 y, ArgT3 z) -> ResultT { 
+            return ((*this)(x, y, z + h) - (*this)(x, y, z - h)) / (2 * h); 
+        });
     }
 
     FUNCTION_TEMPLATE_3D
@@ -1748,6 +1694,7 @@ namespace vmafu {
                     double coeff_z = (k == 0 || k == n3) ? 0.5 : 1.0;
                     
                     ResultT f_val = (*this)(x, y, z);
+
                     sum += coeff_x * coeff_y * coeff_z * f_val * f_val;
                 }
             }
@@ -1784,6 +1731,7 @@ namespace vmafu {
                 
                 for (size_t k = 0; k <= n3; k++) {
                     ArgT3 z = a3 + k * h3;
+
                     ResultT val = (*this)(x, y, z);
                     if (val > max_val) {
                         max_val = val;
@@ -1823,6 +1771,7 @@ namespace vmafu {
                 
                 for (size_t k = 0; k <= n3; k++) {
                     ArgT3 z = a3 + k * h3;
+
                     ResultT val = (*this)(x, y, z);
                     if (val < min_val) {
                         min_val = val;
@@ -1883,9 +1832,7 @@ namespace vmafu {
 
     FUNCTION_TEMPLATE_3D
     FUNCTION_TYPE_3D FUNCTION_TYPE_3D::constant(ResultT value) {
-        return Function(std::function<ResultT(ArgT1, ArgT2, ArgT3)>(
-            [value](ArgT1 x, ArgT2 y, ArgT3 z) { return value; })
-        );
+        return Function([value](ArgT1 x, ArgT2 y, ArgT3 z) -> ResultT { return value; });
     }
 
     FUNCTION_TEMPLATE_3D
@@ -1893,10 +1840,10 @@ namespace vmafu {
         ResultT a, ResultT b, ResultT c, ResultT d, 
         ResultT e, ResultT f, ResultT g, ResultT h
     ) {
-        return Function(std::function<ResultT(ArgT1, ArgT2, ArgT3)>(
-            [a, b, c, d, e, f, g, h](ArgT1 x, ArgT2 y, ArgT3 z) { 
+        return Function(
+            [a, b, c, d, e, f, g, h](ArgT1 x, ArgT2 y, ArgT3 z) -> ResultT { 
                 return a * x * y * z + b * x * y + c * x * z + d * y * z + e * x + f * y + g * z + h; 
-            })
+            }
         );
     }
 
@@ -1904,14 +1851,14 @@ namespace vmafu {
     FUNCTION_TYPE_3D FUNCTION_TYPE_3D::gaussian(
         ResultT sigma_x, ResultT sigma_y, ResultT sigma_z
     ) {
-        return Function(std::function<ResultT(ArgT1, ArgT2, ArgT3)>(
-            [sigma_x, sigma_y, sigma_z](ArgT1 x, ArgT2 y, ArgT3 z) { 
+        return Function(
+            [sigma_x, sigma_y, sigma_z](ArgT1 x, ArgT2 y, ArgT3 z) -> ResultT { 
                 return std::exp(
                     - (x * x) / (2 * sigma_x * sigma_x) - 
                     (y * y) / (2 * sigma_y * sigma_y) - 
                     (z * z) / (2 * sigma_z * sigma_z)
                 ); 
-            })
+            }
         );
     }
 

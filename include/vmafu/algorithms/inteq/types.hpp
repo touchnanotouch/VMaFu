@@ -13,7 +13,7 @@ namespace vmafu {
     };
 
     enum class BasisType {
-        Polynomial,      // φ_j(x) = x^j
+        Polynomial,      // phi_j(x) = x^j
         Fourier,
         Chebyshev,       // Chebyshev 1-kind
         Legendre
