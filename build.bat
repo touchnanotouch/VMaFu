@@ -38,7 +38,7 @@ if not errorlevel 1 (
     echo [INFO] CMake found, generating build system...
     mkdir build 2>nul
     cd build
-    cmake .. -G "MinGW Makefiles"
+    cmake ..
     if not errorlevel 1 (
         echo.
         echo [INFO] Building with CMake...
