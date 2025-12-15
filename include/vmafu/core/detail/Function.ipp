@@ -825,11 +825,9 @@ namespace vmafu {
             }
         }
 
-        return Function(std::function<ResultT(ArgT1, ArgT2)>(
-            [this, scalar](ArgT1 x, ArgT2 y) { 
-                return (*this)(x, y) / scalar; 
-            })
-        );
+        return Function([this, scalar](ArgT1 x, ArgT2 y) -> ResultT { 
+            return (*this)(x, y) / scalar; 
+        });
     }
 
     FUNCTION_TEMPLATE_2D
