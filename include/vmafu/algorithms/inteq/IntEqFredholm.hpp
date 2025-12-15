@@ -47,7 +47,7 @@ namespace vmafu {
 
             IntEqFredholm(
                 Function2D<T> kernel,
-                const Function1D<T>& free_term,
+                Function1D<T> free_term,
                 T lambda,
                 T a, T b
             );

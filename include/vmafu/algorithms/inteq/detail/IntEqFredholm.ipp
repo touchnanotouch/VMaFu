@@ -21,7 +21,7 @@ namespace vmafu {
                 return Function2D<T>([](size_t j, T x) -> T {
                     if (j == 0) { return T{1}; }
 
-                    size_t k = (j + 1) / 2
+                    size_t k = (j + 1) / 2;
 
                     if (j % 2 == 1) {
                         return std::cos(static_cast<T>(k) * x);
@@ -259,7 +259,7 @@ namespace vmafu {
     template <typename T>
     IntEqFredholm<T>::IntEqFredholm(
         Function2D<T> kernel,
-        const Function1D<T>& free_term,
+        Function1D<T> free_term,
         T lambda,
         T a, T b
     ) : _kernel(kernel), _free_term(free_term), _lambda(lambda), _a(a), _b(b) {}
@@ -272,7 +272,7 @@ namespace vmafu {
             case SolutionMethod::Collocation:
                 return solve_collocation(config);
             case SolutionMethod::Galerkin:
-                return solve_galerkin(config)
+                return solve_galerkin(config);
             default:
                 throw std::invalid_argument("Unknown solution method");
         }
