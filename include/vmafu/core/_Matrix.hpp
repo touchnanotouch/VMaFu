@@ -1,3 +1,6 @@
+// core/_Matrix.hpp
+
+
 #pragma once
 
 
@@ -192,4 +195,4 @@ namespace vmafu {
 }
 
 
-#include "detail/Matrix.ipp"
+#include "detail/_Matrix.ipp"

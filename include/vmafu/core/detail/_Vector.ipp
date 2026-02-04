@@ -1,3 +1,6 @@
+// core/detail/_Vector.ipp
+
+
 namespace vmafu {
     // Checks
 

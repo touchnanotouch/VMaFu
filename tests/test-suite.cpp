@@ -1,5 +1,5 @@
-#include <vmafu/core/Vector.hpp>
-#include <vmafu/core/Matrix.hpp>
+#include <vmafu/core/_Vector.hpp>
+#include <vmafu/core/_Matrix.hpp>
 
 #include "vmafu/core/test-vector.cpp"
 #include "vmafu/core/test-matrix.cpp"

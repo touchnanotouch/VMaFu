@@ -1,3 +1,6 @@
+// core/_Function.hpp
+
+
 #pragma once
 
 
@@ -8,7 +11,7 @@
 #include <ostream>
 #include <stdexcept>
 
-#include "Vector.hpp"
+#include "_Vector.hpp"
 
 
 namespace vmafu {
@@ -493,4 +496,4 @@ namespace vmafu {
 }
 
 
-#include "detail/Function.ipp"
+#include "detail/_Function.ipp"

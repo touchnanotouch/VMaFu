@@ -1,3 +1,6 @@
+// core/detail/_Function.ipp
+
+
 namespace vmafu {
     // Macros
 

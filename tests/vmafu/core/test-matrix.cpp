@@ -1,4 +1,4 @@
-#include <vmafu/core/Matrix.hpp>
+#include <vmafu/core/_Matrix.hpp>
 
 #include "test-utils.hpp"
 

@@ -1,4 +1,7 @@
-#include "../Vector.hpp"
+// core/detail/_Matrix.ipp
+
+
+#include "../_Vector.hpp"
 
 
 namespace vmafu {

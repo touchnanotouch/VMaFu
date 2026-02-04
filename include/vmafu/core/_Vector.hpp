@@ -1,3 +1,6 @@
+// core/_Vector.hpp
+
+
 #pragma once
 
 
@@ -124,4 +127,4 @@ namespace vmafu {
 }
 
 
-#include "detail/Vector.ipp"
+#include "detail/_Vector.ipp"

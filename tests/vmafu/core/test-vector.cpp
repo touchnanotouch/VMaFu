@@ -1,4 +1,4 @@
-#include <vmafu/core/Vector.hpp>
+#include <vmafu/core/_Vector.hpp>
 
 #include "test-utils.hpp"
 
