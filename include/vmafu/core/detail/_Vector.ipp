@@ -96,13 +96,19 @@ namespace vmafu {
     // Getters
 
     template <typename T>
-    size_t Vector<T>::size() const noexcept { return _size; }
+    size_t Vector<T>::size() const noexcept {
+        return _size;
+    }
 
     template <typename T>
-    double Vector<T>::eps() const noexcept { return _eps; }
+    double Vector<T>::eps() const noexcept {
+        return _eps;
+    }
 
     template <typename T>
-    bool Vector<T>::empty() const noexcept { return _size == 0; }
+    bool Vector<T>::empty() const noexcept {
+        return _size == 0;
+    }
 
     // Setters
 

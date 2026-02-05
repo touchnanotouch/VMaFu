@@ -156,8 +156,8 @@ namespace vmafu {
 
             // Friend methods
 
-            template <typename U, typename V>
-            friend std::ostream& operator<<(std::ostream& os, const Function<U, V>& f);
+            template <typename RT, typename AT>
+            friend std::ostream& operator<<(std::ostream& os, const Function<RT, AT>& f);
     };
 
     // Function 2-d class
@@ -298,7 +298,8 @@ namespace vmafu {
 
             // Friend methods
 
-            friend std::ostream& operator<<(std::ostream& os, const Function<ResultT, ArgT1, ArgT2>& f);
+            template <typename RT, typename AT1, typename AT2>
+            friend std::ostream& operator<<(std::ostream& os, const Function<RT, AT1, AT2>& f);
         };
 
     // Function 3-d class
@@ -466,7 +467,8 @@ namespace vmafu {
 
             // Friend methods
 
-            friend std::ostream& operator<<(std::ostream& os, const Function<ResultT, ArgT1, ArgT2, ArgT3>& f);
+            template <typename RT, typename AT1, typename AT2, typename AT3>
+            friend std::ostream& operator<<(std::ostream& os, const Function<RT, AT1, AT2, AT3>& f);
     };
 
     // External methods

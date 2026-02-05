@@ -43,10 +43,14 @@ namespace vmafu {
     // Getters
 
     FUNCTION_TEMPLATE_1D
-    double FUNCTION_TYPE_1D::eps() const noexcept { return _eps; }
+    double FUNCTION_TYPE_1D::eps() const noexcept {
+        return _eps;
+    }
 
     FUNCTION_TEMPLATE_1D
-    bool FUNCTION_TYPE_1D::is_initialized() const noexcept { return static_cast<bool>(_func); }
+    bool FUNCTION_TYPE_1D::is_initialized() const noexcept {
+        return static_cast<bool>(_func);
+    }
 
     // Setters
 
@@ -651,10 +655,14 @@ namespace vmafu {
     // Getters
 
     FUNCTION_TEMPLATE_2D
-    double FUNCTION_TYPE_2D::eps() const noexcept { return _eps; }
+    double FUNCTION_TYPE_2D::eps() const noexcept {
+        return _eps;
+    }
 
     FUNCTION_TEMPLATE_2D
-    bool FUNCTION_TYPE_2D::is_initialized() const noexcept { return static_cast<bool>(_func); }
+    bool FUNCTION_TYPE_2D::is_initialized() const noexcept {
+        return static_cast<bool>(_func);
+    }
 
     // Setters
 
@@ -1297,10 +1305,14 @@ namespace vmafu {
     // Getters
 
     FUNCTION_TEMPLATE_3D
-    double FUNCTION_TYPE_3D::eps() const noexcept { return _eps; }
+    double FUNCTION_TYPE_3D::eps() const noexcept {
+        return _eps;
+    }
 
     FUNCTION_TEMPLATE_3D
-    bool FUNCTION_TYPE_3D::is_initialized() const noexcept { return static_cast<bool>(_func); }
+    bool FUNCTION_TYPE_3D::is_initialized() const noexcept {
+        return static_cast<bool>(_func);
+    }
 
     // Setters
 
