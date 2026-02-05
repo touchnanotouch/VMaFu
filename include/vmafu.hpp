@@ -12,4 +12,7 @@
 
 #include "vmafu/io/io.hpp"
 
+// Parallel
+
+#include "vmafu/parallel/parallel.hpp"
 

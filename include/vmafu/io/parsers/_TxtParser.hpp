@@ -60,6 +60,8 @@ namespace vmafu {
                 );
             };
         }
+
+        using parsers::TxtParser;
     }
 }
 

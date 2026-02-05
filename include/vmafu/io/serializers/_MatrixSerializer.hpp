@@ -54,6 +54,8 @@ namespace vmafu {
                 );
             };
         }
+
+        using serializers::MatrixSerializer;
     }
 }
 

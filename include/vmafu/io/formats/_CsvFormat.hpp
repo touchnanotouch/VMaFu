@@ -94,6 +94,8 @@ namespace vmafu {
                     bool validate_stream(std::istream& stream) const override;
             };
         }
+
+        using formats::CsvFormat;
     }
 }
 

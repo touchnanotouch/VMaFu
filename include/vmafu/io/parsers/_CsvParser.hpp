@@ -72,6 +72,8 @@ namespace vmafu {
                     );
             };
         }
+
+        using parsers::CsvParser;
     }
 }
 
