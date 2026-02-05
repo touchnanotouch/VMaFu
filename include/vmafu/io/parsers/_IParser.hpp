@@ -18,10 +18,14 @@ namespace vmafu {
 
                     virtual ~IParser() = default;
 
-                    // Parse method
+                    // Parsing methodd
 
                     virtual std::vector<std::vector<std::string>> parse(
                         const std::string& content
+                    ) const = 0;
+
+                    virtual std::string unparse(
+                        const std::vector<std::vector<std::string>>& data
                     ) const = 0;
                     
                     // Validation method

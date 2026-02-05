@@ -49,10 +49,14 @@ namespace vmafu {
                     bool trim_cells() const noexcept;
                     bool has_header() const noexcept;
 
-                    // Parse method
+                    // Parsing methods
 
                     std::vector<std::vector<std::string>> parse(
                         const std::string& content
+                    ) const override;
+
+                    std::string unparse(
+                        const std::vector<std::vector<std::string>>& data
                     ) const override;
 
                     // Validation method

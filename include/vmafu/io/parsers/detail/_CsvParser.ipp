@@ -171,7 +171,7 @@ namespace vmafu {
                 return _has_header;
             }
 
-            // Parse method
+            // Parsing methods
 
             std::vector<std::vector<std::string>> CsvParser::parse(
                 const std::string& content
@@ -195,6 +195,30 @@ namespace vmafu {
                 }
 
                 return result;
+            }
+
+            std::string CsvParser::unparse(
+                const std::vector<std::vector<std::string>>& data
+            ) const {
+                std::ostringstream oss;
+                
+                for (size_t i = 0; i < data.size(); ++i) {
+                    const auto& row = data[i];
+                    
+                    for (size_t j = 0; j < row.size(); ++j) {
+                        oss << escape_field(row[j]);
+                        
+                        if (j + 1 < row.size()) {
+                            oss << _delimiter;
+                        }
+                    }
+                    
+                    if (i + 1 < data.size()) {
+                        oss << "\n";
+                    }
+                }
+                
+                return oss.str();
             }
 
             // Validation method

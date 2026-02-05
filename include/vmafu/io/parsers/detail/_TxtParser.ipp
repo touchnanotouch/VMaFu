@@ -75,7 +75,7 @@ namespace vmafu {
                 return _split_by_whitespace;
             }
 
-            // Parse method
+            // Parsing methods
 
             std::vector<std::vector<std::string>> TxtParser::parse(
                 const std::string& content
@@ -104,6 +104,38 @@ namespace vmafu {
 
                 return result;
             }
+
+            std::string TxtParser::unparse(
+                const std::vector<std::vector<std::string>>& data
+            ) const {
+                std::ostringstream oss;
+                
+                for (size_t i = 0; i < data.size(); ++i) {
+                    const auto& row = data[i];
+                    
+                    if (_split_by_whitespace) {
+                        for (size_t j = 0; j < row.size(); ++j) {
+                            oss << row[j];
+
+                            if (j + 1 < row.size()) {
+                                oss << " ";
+                            }
+                        }
+                    } else {
+                        if (!row.empty()) {
+                            oss << row[0];
+                        }
+                    }
+                    
+                    if (i + 1 < data.size()) {
+                        oss << "\n";
+                    }
+                }
+                
+                return oss.str();
+            }
+
+            // Validation method
 
             bool TxtParser::validate(const std::string& content) const {
                 return true;

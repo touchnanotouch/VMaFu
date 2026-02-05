@@ -37,10 +37,14 @@ namespace vmafu {
                 bool skip_empty_lines() const noexcept;
                 bool split_by_whitespace() const noexcept;
 
-                // Parse method
+                // Parsing methods
 
                 std::vector<std::vector<std::string>> parse(
                     const std::string& content
+                ) const override;
+
+                std::string unparse(
+                    const std::vector<std::vector<std::string>>& data
                 ) const override;
                 
                 // Validation method
