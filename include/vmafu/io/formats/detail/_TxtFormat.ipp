@@ -215,6 +215,16 @@ namespace vmafu {
 
                 return validate(content);
             }
+        
+            FormatPtr TxtFormat::create(
+                bool trim_lines,
+                bool skip_empty_lines,
+                bool split_by_whitespace
+            ) {
+                return std::make_shared<TxtFormat>(
+                    trim_lines, skip_empty_lines, split_by_whitespace
+                );
+            }
         }
     }
 }

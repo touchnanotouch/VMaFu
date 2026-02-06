@@ -86,5 +86,7 @@ namespace vmafu {
 
             using FormatPtr = std::shared_ptr<IFormat>;
         }
+
+        using formats::FormatPtr;
     }
 }

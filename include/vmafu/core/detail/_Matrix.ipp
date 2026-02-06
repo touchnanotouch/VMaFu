@@ -1080,7 +1080,7 @@ namespace vmafu {
     }
 
     template <typename T>
-    Matrix<T> Matrix<T>::from_function(size_t rows, size_t cols, T (*func)(size_t, size_t)) {
+    Matrix<T> Matrix<T>::from_function(size_t rows, size_t cols, T (*func)(T, T)) {
         Matrix result(rows, cols);
         for (size_t i = 0; i < rows; i++) {
             for (size_t j = 0; j < cols; j++) {

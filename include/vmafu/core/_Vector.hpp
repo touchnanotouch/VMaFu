@@ -45,9 +45,7 @@ namespace vmafu {
             // Getters
 
             size_t size() const noexcept;
-
             double eps() const noexcept;
-
             bool empty() const noexcept;
 
             // Setters

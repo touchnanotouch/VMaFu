@@ -202,10 +202,10 @@ namespace vmafu {
             ) const {
                 std::ostringstream oss;
                 
-                for (size_t i = 0; i < data.size(); ++i) {
+                for (size_t i = 0; i < data.size(); i++) {
                     const auto& row = data[i];
                     
-                    for (size_t j = 0; j < row.size(); ++j) {
+                    for (size_t j = 0; j < row.size(); j++) {
                         oss << escape_field(row[j]);
                         
                         if (j + 1 < row.size()) {

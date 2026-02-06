@@ -4,9 +4,10 @@
 #pragma once
 
 
-#include <vector>
 #include <string>
-#include <sstream>
+#include <memory>
+#include <stdexcept>
+#include <vector>
 
 
 namespace vmafu {
@@ -37,5 +38,7 @@ namespace vmafu {
 
             using ParserPtr = std::shared_ptr<IParser>;
         }
+
+        using parsers::ParserPtr;
     }
 }

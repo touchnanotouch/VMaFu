@@ -206,6 +206,18 @@ namespace vmafu {
 
                 return validate(content);
             }
+
+            // Static method
+
+            FormatPtr CsvFormat::create(
+                char delimiter,
+                bool trim_cells,
+                bool has_header
+            ) {
+                return std::make_shared<CsvFormat>(
+                    delimiter, trim_cells, has_header
+                );
+            }
         }
     }
 }

@@ -11,13 +11,11 @@
 #include <initializer_list>
 
 
-// Forward declarations
-
 namespace vmafu {
+    // Forward declaration
+
     template <typename T> class Vector;
-}
 
-namespace vmafu {
     // Main class
 
     template <typename T>
@@ -177,7 +175,7 @@ namespace vmafu {
             static Matrix zeros(size_t rows, size_t cols);
             static Matrix ones(size_t rows, size_t cols);
             static Matrix diagonal(const Vector<T>& diag);
-            static Matrix from_function(size_t rows, size_t cols, T (*func)(size_t, size_t));
+            static Matrix from_function(size_t rows, size_t cols, T (*func)(T, T));
 
             // Friend methods
 

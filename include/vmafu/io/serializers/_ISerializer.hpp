@@ -6,6 +6,7 @@
 
 #include <vector>
 #include <string>
+#include <memory>
 
 
 namespace vmafu {
@@ -28,5 +29,7 @@ namespace vmafu {
             template <typename DataT>
             using SerializerPtr = std::shared_ptr<ISerializer<DataT>>;
         }
+
+        using serializers::SerializerPtr;
     }
 }

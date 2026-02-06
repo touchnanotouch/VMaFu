@@ -80,9 +80,10 @@ namespace vmafu {
             std::vector<std::vector<std::string>> TxtParser::parse(
                 const std::string& content
             ) const {
-                std::vector<std::vector<std::string>> result;
                 std::istringstream iss(content);
                 std::string line;
+
+                std::vector<std::vector<std::string>> result;
 
                 while (std::getline(iss, line)) {
                     std::string processed_line = process_line(line);
@@ -110,11 +111,11 @@ namespace vmafu {
             ) const {
                 std::ostringstream oss;
                 
-                for (size_t i = 0; i < data.size(); ++i) {
+                for (size_t i = 0; i < data.size(); i++) {
                     const auto& row = data[i];
                     
                     if (_split_by_whitespace) {
-                        for (size_t j = 0; j < row.size(); ++j) {
+                        for (size_t j = 0; j < row.size(); j++) {
                             oss << row[j];
 
                             if (j + 1 < row.size()) {

@@ -92,6 +92,14 @@ namespace vmafu {
 
                     bool validate(const std::string& content) const override;
                     bool validate_stream(std::istream& stream) const override;
+
+                    // Static method
+
+                    static FormatPtr create(
+                        char delimiter = ',',
+                        bool trim_cells = true,
+                        bool has_header = false
+                    );
             };
         }
 
