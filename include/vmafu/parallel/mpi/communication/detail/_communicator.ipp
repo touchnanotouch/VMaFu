@@ -12,8 +12,8 @@ namespace vmafu {
 
             // Getters
 
-            Communicator& world()  {
-                static Communicator world_comm;
+            Communicator& world() {
+                static Communicator world_comm(MPI_COMM_WORLD, false);
                 return world_comm;
             }
 
@@ -73,7 +73,10 @@ namespace vmafu {
             }
 
             Communicator::~Communicator() {
-                if (_owned && _comm != MPI_COMM_NULL && _comm != MPI_COMM_WORLD) {
+                if (
+                    _owned && _comm != MPI_COMM_NULL && \
+                    _comm != MPI_COMM_WORLD
+                ) {
                     MPI_Comm_free(&_comm);
                 }
             }
@@ -92,18 +95,43 @@ namespace vmafu {
                 return _comm;
             }
 
+            // Copy/Assignment
+
+            Communicator::Communicator(
+                const Communicator& other
+            ) : _comm(other._comm),  _owned(false),
+                _rank(other._rank), _size(other._size) {
+
+            }
+
+            Communicator& Communicator::operator=(const Communicator& other) {
+                if (this != &other) {
+                    if (
+                        _owned && _comm != MPI_COMM_NULL && \
+                        _comm != MPI_COMM_WORLD
+                    ) {
+                        MPI_Comm_free(&_comm);
+                    }
+                    
+                    _comm = other._comm;
+                    _owned = false;
+                    _rank = other._rank;
+                    _size = other._size;
+                }
+
+                return *this;
+            }
+
             // Move operators
 
             Communicator::Communicator(
                 Communicator&& other
-            ) noexcept 
-              : _comm(other._comm), _owned(other._owned), 
+            ) noexcept
+              : _comm(other._comm), _owned(other._owned),
                 _rank(other._rank), _size(other._size) 
             {
                 other._comm = MPI_COMM_NULL;
                 other._owned = false;
-                other._rank = MPI_PROC_NULL;
-                other._size = 0;
             }
 
             Communicator& Communicator::operator=(

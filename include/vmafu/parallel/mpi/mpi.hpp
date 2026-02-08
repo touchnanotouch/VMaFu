@@ -4,6 +4,10 @@
 #pragma once
 
 
+// _io.hpp
+
+#include "_mpi.hpp"
+
 // Config
 
 #include "config/config.hpp"

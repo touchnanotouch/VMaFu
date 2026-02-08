@@ -75,29 +75,29 @@ namespace vmafu {
                     template <typename T>
                     static void scatter(
                         const vmafu::Matrix<T>& global,
-                        vmafu::Matrix<T>& local,
                         const DistributionInfo& info,
-                        const Communicator& comm,
-                        int root
+                        vmafu::Matrix<T>& local,
+                        int root,
+                        const Communicator& comm
                     );
 
                     // Сбор данных
                     template <typename T>
                     static void gather(
-                        const vmafu::Matrix<T>& local,
                         vmafu::Matrix<T>& global,
                         const DistributionInfo& info,
-                        const Communicator& comm,
-                        int root
+                        const vmafu::Matrix<T>& local,
+                        int root,
+                        const Communicator& comm
                     );
                 }
-
-                using data::DistributionType;
-                using data::DistributionInfo;
 
                 using data::process_grid, data::distribution_info;
                 using data::gather, data::scatter;
             }
+
+            using internal::data::DistributionType;
+            using internal::data::DistributionInfo;
         }
     }
 }

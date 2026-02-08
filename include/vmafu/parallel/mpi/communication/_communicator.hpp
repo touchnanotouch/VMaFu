@@ -43,11 +43,12 @@ namespace vmafu {
                     MPI_Comm _comm;
 
                     bool _owned;
+
                     int _rank;
                     int _size;
 
                     // Helper method
-                    
+
                     void update_info();
 
                 public:
@@ -74,10 +75,10 @@ namespace vmafu {
 
                     MPI_Comm get() const;
 
-                    // Copying/Assignment restriction
+                    // Copy/Assignment
 
-                    Communicator(const Communicator&) = delete;
-                    Communicator& operator=(const Communicator&) = delete;
+                    Communicator(const Communicator&);
+                    Communicator& operator=(const Communicator&);
 
                     // Move operators
 

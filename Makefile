@@ -4,12 +4,13 @@
 
 BUILD_DIR_MPI = build_mpi
 BUILD_DIR_NOMPI = build_nompi
-NUM_PROCS = 4
+
+NUM_PROCS = 8
 
 DEMO_EXEC = demo.exe
 MPIEXEC = "C:/Program Files/Microsoft MPI/Bin/mpiexec.exe"
 
-BUILD_TYPE ?= nompi
+BUILD_TYPE ?= mpi
 
 help:
 	@echo "Makefile Commands:"

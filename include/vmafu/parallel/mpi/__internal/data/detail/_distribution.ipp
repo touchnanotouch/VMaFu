@@ -168,10 +168,10 @@ namespace vmafu {
                     template <typename T>
                     void scatter(
                         const vmafu::Matrix<T>& global,
-                        vmafu::Matrix<T>& local,
                         const DistributionInfo& info,
-                        const Communicator& comm,
-                        int root
+                        vmafu::Matrix<T>& local,
+                        int root,
+                        const Communicator& comm
                     ) {
                         int rank = comm.rank();
                         int size = comm.size();
@@ -280,11 +280,11 @@ namespace vmafu {
                     // Сбор локальных матриц в глобальную
                     template <typename T>
                     void gather(
-                        const vmafu::Matrix<T>& local,
                         vmafu::Matrix<T>& global,
                         const DistributionInfo& info,
-                        const Communicator& comm,
-                        int root
+                        const vmafu::Matrix<T>& local,
+                        int root,
+                        const Communicator& comm
                     ) {
                         int rank = comm.rank();
                         int size = comm.size();

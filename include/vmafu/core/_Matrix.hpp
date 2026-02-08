@@ -60,6 +60,8 @@ namespace vmafu {
 
             size_t _flat_index(size_t row, size_t col) const noexcept;
 
+            T* data() const noexcept;
+
             size_t rows() const noexcept;
             size_t cols() const noexcept;
             size_t size() const noexcept;

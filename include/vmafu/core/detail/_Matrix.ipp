@@ -356,6 +356,9 @@ namespace vmafu {
     }
 
     template <typename T>
+    T* Matrix<T>::data() const noexcept { return _data; }
+
+    template <typename T>
     size_t Matrix<T>::rows() const noexcept { return _rows; }
     
     template <typename T>

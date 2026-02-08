@@ -1,4 +1,4 @@
-// io/io.hpp
+// io/_io.hpp
 
 
 #pragma once
@@ -10,145 +10,59 @@
 #include "parsers/parsers.hpp"
 #include "serializers/serializers.hpp"
 
+#include "../core/_Vector.hpp"
+#include "../core/_Matrix.hpp"
+
 
 namespace vmafu {
     namespace io {
-        FormatPtr create_format(const std::string& filename) {
-            size_t dot_pos = filename.find_last_of('.');
+        FormatPtr create_format(const std::string& filename);
 
-            if (dot_pos != std::string::npos) {
-                std::string ext = filename.substr(dot_pos);
-                
-                if (ext == ".csv" || ext == ".CSV") {
-                    return CsvFormat::create();
-                } else if (
-                    ext == ".txt" || ext == ".TXT" || \
-                    ext == ".dat" || ext == ".DAT"
-                ) {
-                    return TxtFormat::create();
-                }
-            }
-
-            return TxtFormat::create();
-        }
-
-        ParserPtr create_parser(const std::string& filename) {
-            size_t dot_pos = filename.find_last_of('.');
-
-            if (dot_pos != std::string::npos) {
-                std::string ext = filename.substr(dot_pos);
-                
-                if (ext == ".csv" || ext == ".CSV") {
-                    return CsvParser::create();
-                } else if (
-                    ext == ".txt" || ext == ".TXT" || \
-                    ext == ".dat" || ext == ".DAT"
-                ) {
-                    return TxtParser::create();
-                }
-            }
-
-            return TxtParser::create();
-        }
+        ParserPtr create_parser(const std::string& filename);
 
         template <typename T>
-        SerializerPtr<Matrix<T>> create_serializer(const Matrix<T>&) {
-            return MatrixSerializer<T>::create();
-        }
+        SerializerPtr<Matrix<T>> create_serializer(const Matrix<T>&);
 
         template <typename T>
-        SerializerPtr<Vector<T>> create_serializer(const Vector<T>&) {
-            return VectorSerializer<T>::create();
-        }
+        SerializerPtr<Vector<T>> create_serializer(const Vector<T>&);
 
         template <typename T>
-        vmafu::Vector<T> load_vector(const std::string& filename) {
-            FormatPtr format = create_format(filename);
-            ParserPtr parser = create_parser(filename);
-
-            auto serializer = create_serializer(Vector<T>());
-
-            return serializer->deserialize(
-                parser->parse(format->read(filename))
-            );
-        }
+        Vector<T> load_vector(const std::string& filename);
 
         template <typename T>
-        vmafu::Matrix<T> load_matrix(const std::string& filename) {
-            FormatPtr format = create_format(filename);
-            ParserPtr parser = create_parser(filename);
-
-            auto serializer = create_serializer(Matrix<T>());
-
-            return serializer->deserialize(
-                parser->parse(format->read(filename))
-            );
-        }
+        Matrix<T> load_matrix(const std::string& filename);
 
         template <typename T>
         void save_vector(
             const std::string& filename,
-            const vmafu::Vector<T>& data
-        ) {
-            FormatPtr format = create_format(filename);
-            ParserPtr parser = create_parser(filename);
-
-            auto serializer = create_serializer(data);
-            
-            format->write(
-                filename, parser->unparse(serializer->serialize(data))
-            );
-        }
+            const Vector<T>& data
+        );
 
         template <typename T>
         void save_matrix(
             const std::string& filename,
-            const vmafu::Matrix<T>& data
-        ) {
-            FormatPtr format = create_format(filename);
-            ParserPtr parser = create_parser(filename);
-
-            auto serializer = create_serializer(data);
-
-            format->write(
-                filename, parser->unparse(serializer->serialize(data))
-            );
-        }
+            const Matrix<T>& data
+        );
 
         template <typename T>
-        vmafu::Vector<T> load(
+        Vector<T> load(
             const std::string& filename,
-            const vmafu::Vector<T>&
-        ) {
-            return load_vector<T>(filename);
-        }
+            const Vector<T>&
+        );
 
         template <typename T>
-        vmafu::Matrix<T> load(
+        Matrix<T> load(
             const std::string& filename,
-            const vmafu::Matrix<T>&
-        ) {
-            return load_matrix<T>(filename);
-        }
+            const Matrix<T>&
+        );
 
         template <typename T>
-        void save(const std::string& filename, const T& data) {
-            FormatPtr format = create_format(filename);
-            ParserPtr parser = create_parser(filename);
-
-            auto serializer = create_serializer(data);
-
-            format->write(
-                filename, parser->unparse(serializer->serialize(data))
-            );
-        }
+        T load(const std::string& filename);
 
         template <typename T>
-        T load(const std::string& filename) {
-            T dummy{};
-
-            return load(filename, dummy);
-        }
-
+        void save(const std::string& filename, const T& data);
     }
 }
+
+
+#include "detail/_io.ipp"
