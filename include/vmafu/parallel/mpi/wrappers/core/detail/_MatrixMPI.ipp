@@ -25,18 +25,12 @@ namespace vmafu {
                 // Constructors
 
                 template <typename T>
-                MatrixMPI<T>::MatrixMPI(
-
-                ) : _comm(world()) {
-
-                }
+                MatrixMPI<T>::MatrixMPI() : _comm(world()) {}
 
                 template <typename T>
                 MatrixMPI<T>::MatrixMPI(
                     const Communicator& comm
-                ) : _comm(comm) {
-
-                }
+                ) : _comm(comm) {}
 
                 template <typename T>
                 MatrixMPI<T>::MatrixMPI(
@@ -50,18 +44,19 @@ namespace vmafu {
                             global_matrix.rows() != _dist_info.global_rows || \
                             global_matrix.cols() != _dist_info.global_cols
                         ) {
-                            throw std::invalid_argument("Global matrix dimensions do not match distribution");
+                            throw std::invalid_argument(
+                                "MatrixMPI(): Global matrix dimensions do not match distribution"
+                            );
                         }
                     }
 
-                    _local_matrix = Matrix<T>(_dist_info.local_rows, _dist_info.local_cols);
+                    _local_matrix = Matrix<T>(
+                        _dist_info.local_rows, _dist_info.local_cols
+                    );
 
                     scatter(
-                        global_matrix,
-                        _dist_info,
-                        _local_matrix, 
-                        root,
-                        _comm
+                        global_matrix, _dist_info, _local_matrix, 
+                        root, _comm
                     );
                 }
 
@@ -118,10 +113,8 @@ namespace vmafu {
 
                     // 1. Определяем оптимальное распределение для результата
 
-                    DistributionInfo dist_result = internal::data::distribution_info(
-                        N, P,
-                        DistributionType::BLOCK_ROWS,
-                        _comm
+                    DistributionInfo dist_result = internal::distribution_info(
+                        DistributionType::BLOCK_ROWS, N, P, _comm
                     );
 
                     // 2. Подготавливаем матрицу A для умножения
@@ -130,10 +123,8 @@ namespace vmafu {
                     if (_dist_info.type == DistributionType::BLOCK_ROWS) {
                         local_A = _local_matrix;
                     } else {
-                        DistributionInfo dist_A_rows = internal::data::distribution_info(
-                            N, M,
-                            DistributionType::BLOCK_ROWS, 
-                            _comm
+                        DistributionInfo dist_A = internal::distribution_info(
+                            DistributionType::BLOCK_ROWS, N, M, _comm
                         );
 
                         Matrix<T> global_A;
@@ -141,34 +132,94 @@ namespace vmafu {
                             global_A = Matrix<T>(N, M);
                         }
 
-                        internal::gather(global_A, _dist_info, _local_matrix, root, _comm);
+                        internal::gather(
+                            global_A, _dist_info, _local_matrix,
+                            root, _comm
+                        );
 
-                        local_A = Matrix<T>(dist_A_rows.local_rows, M);
+                        local_A = Matrix<T>(dist_A.local_rows, M);
 
-                        internal::scatter(global_A, dist_A_rows, local_A, root, _comm);
+                        internal::scatter(
+                            global_A, dist_A, local_A,
+                            root, _comm
+                        );
                     }
 
-                    // 3. Получаем полную матрицу B на всех процессах
+                    // 3. Получаем матрицу B на всех процессах
 
-                    Matrix<T> full_B;
+                    Matrix<T> local_B;
+                    
+                    // Проверяем распределение матрицы B
+                    if (other._dist_info.type == DistributionType::BLOCK_COLS) {
+                        // Если B уже распределена по столбцам, каждый процесс получает нужные столбцы
 
-                    if (size == 1) {
-                        full_B = other._local_matrix;
-                    } else {
                         Matrix<T> global_B;
                         if (rank == root) {
                             global_B = Matrix<T>(M, P);
                         }
 
-                        internal::gather(global_B, other._dist_info, other._local_matrix, root, _comm);
+                        internal::gather(
+                            global_B, other._dist_info, other._local_matrix,
+                            root, _comm
+                        );
 
                         if (rank == root) {
-                            full_B = global_B;
+                            local_B = global_B;
                         } else {
-                            full_B = Matrix<T>(M, P);
+                            local_B = Matrix<T>(M, P);
                         }
 
-                        _comm.broadcast(full_B.data(), static_cast<int>(M * P), root);
+                        _comm.broadcast(
+                            local_B.data(), static_cast<int>(M * P), root
+                        );
+                    } else if (other._dist_info.type == DistributionType::BLOCK_ROWS) {
+                        // Если B распределена по строкам, собираем ее по-другому
+                        
+                        Matrix<T> global_B;
+                        if (rank == root) {
+                            global_B = Matrix<T>(M, P);
+                        }
+
+                        internal::gather(
+                            global_B, other._dist_info, other._local_matrix,
+                            root, _comm
+                        );
+
+                        if (rank == root) {
+                            local_B = global_B;
+                        } else {
+                            local_B = Matrix<T>(M, P);
+                        }
+
+                        _comm.broadcast(
+                            local_B.data(), static_cast<int>(M * P), root
+                        );
+                    } else if (other._dist_info.type == DistributionType::BLOCK_2D) {
+                        // Для BLOCK_2D собираем матрицу целиком
+
+                        Matrix<T> global_B;
+                        if (rank == root) {
+                            global_B = Matrix<T>(M, P);
+                        }
+
+                        internal::gather(
+                            global_B, other._dist_info, other._local_matrix,
+                            root, _comm
+                        );
+
+                        if (rank == root) {
+                            local_B = global_B;
+                        } else {
+                            local_B = Matrix<T>(M, P);
+                        }
+
+                        _comm.broadcast(
+                            local_B.data(), static_cast<int>(M * P), root
+                        );
+                    } else {
+                        throw std::runtime_error(
+                            "multiply_simple(): Unsupported distribution type for matrix B"
+                        );
                     }
 
                     // 4. Локальное умножение (каждый процесс умножает свои строки A на полную B)
@@ -180,7 +231,7 @@ namespace vmafu {
                             T sum = T(0);
 
                             for (size_t k = 0; k < local_A.cols(); k++) {
-                                sum += local_A(i, k) * full_B(k, j);
+                                sum += local_A(i, k) * local_B(k, j);
                             }
 
                             local_C(i, j) = sum;
@@ -204,21 +255,35 @@ namespace vmafu {
                     int root
                 ) const {
                     if (_dist_info.global_cols != other._dist_info.global_rows) {
-                        throw std::invalid_argument("Matrix dimensions are not compatible for multiplication");
+                        throw std::invalid_argument(
+                            "multiply(): Matrix dimensions are not compatible for multiplication"
+                        );
                     }
 
                     if (_comm.get() != other._comm.get()) {
-                        throw std::invalid_argument("Matrices must use the same communicator");
+                        throw std::invalid_argument(
+                            "multiply(): Matrices must use the same communicator"
+                        );
                     }
 
                     switch (method) {
-                        case MultiplicationMethod::SIMPLE:
+                        case MultiplicationMethod::SIMPLE: {
                             return multiply_simple(other, root);
-                        case MultiplicationMethod::CANNON:
-                            // TODO: реализовать (затычка)
-                            return other;
-                        default:
-                            throw std::invalid_argument("Unsupported multiplication method");
+                        }
+                        case MultiplicationMethod::CANNON: {
+                            // TODO: реализовать ( затычка )
+
+                            throw std::runtime_error(
+                                "gather(): BLOCK_2D gather not implemented yet"
+                            );
+
+                            break;
+                        }
+                        default: {
+                            throw std::invalid_argument(
+                                "multiply(): Unsupported multiplication method"
+                            );
+                        }
                     }
                 }
 

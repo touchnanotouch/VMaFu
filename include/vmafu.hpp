@@ -14,9 +14,9 @@
 
 // Parallel
 
-#ifdef USE_MPI
-#include "vmafu/parallel/parallel.hpp"
-#endif
-
+// #ifdef USE_MPI
 // #include "vmafu/parallel/parallel.hpp"
+// #endif
+
+#include "vmafu/parallel/parallel.hpp"
 

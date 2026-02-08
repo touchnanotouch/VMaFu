@@ -80,7 +80,10 @@ namespace vmafu {
                 
                 if (local_provided < required) {
                     MPI_Finalize();
-                    throw std::runtime_error("Insufficient MPI thread support");
+
+                    throw std::runtime_error(
+                        "init_thread():Insufficient MPI thread support"
+                    );
                 }
             }
 

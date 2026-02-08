@@ -62,20 +62,23 @@ namespace vmafu {
 
             // Constructors/Destructor
 
-            Communicator::Communicator() 
-                : _comm(MPI_COMM_WORLD), _owned(false) {
+            Communicator::Communicator(
+
+            ) : _comm(MPI_COMM_WORLD), _owned(false) {
                 update_info();
             }
 
-            Communicator::Communicator(MPI_Comm comm, bool take_ownership) 
-                : _comm(comm), _owned(take_ownership) {
+            Communicator::Communicator(
+                MPI_Comm comm,
+                bool take_ownership
+            ) : _comm(comm), _owned(take_ownership) {
                 update_info();
             }
 
             Communicator::~Communicator() {
                 if (
-                    _owned && _comm != MPI_COMM_NULL && \
-                    _comm != MPI_COMM_WORLD
+                    _owned && \
+                    _comm != MPI_COMM_NULL && _comm != MPI_COMM_WORLD
                 ) {
                     MPI_Comm_free(&_comm);
                 }
@@ -83,15 +86,15 @@ namespace vmafu {
 
             // Getters
 
-            int Communicator::rank() const {
+            int Communicator::rank() const noexcept {
                 return _rank;
             }
 
-            int Communicator::size() const {
+            int Communicator::size() const noexcept {
                 return _size;
             }
 
-            MPI_Comm Communicator::get() const {
+            MPI_Comm Communicator::get() const noexcept {
                 return _comm;
             }
 
@@ -107,12 +110,12 @@ namespace vmafu {
             Communicator& Communicator::operator=(const Communicator& other) {
                 if (this != &other) {
                     if (
-                        _owned && _comm != MPI_COMM_NULL && \
-                        _comm != MPI_COMM_WORLD
+                        _owned && \
+                        _comm != MPI_COMM_NULL && _comm != MPI_COMM_WORLD
                     ) {
                         MPI_Comm_free(&_comm);
                     }
-                    
+
                     _comm = other._comm;
                     _owned = false;
                     _rank = other._rank;
@@ -138,7 +141,10 @@ namespace vmafu {
                 Communicator&& other
             ) noexcept {
                 if (this != &other) {
-                    if (_owned && _comm != MPI_COMM_NULL && _comm != MPI_COMM_WORLD) {
+                    if (
+                        _owned && \
+                        _comm != MPI_COMM_NULL && _comm != MPI_COMM_WORLD
+                    ) {
                         MPI_Comm_free(&_comm);
                     }
 
@@ -278,7 +284,11 @@ namespace vmafu {
                 MPI_Comm new_comm;
 
                 MPI_Comm_group(parent._comm, &world_group);
-                MPI_Group_incl(world_group, ranks.size(), ranks.data(), &new_group);
+
+                MPI_Group_incl(
+                    world_group, ranks.size(), ranks.data(), &new_group
+                );
+
                 MPI_Comm_create(parent._comm, new_group, &new_comm);
 
                 MPI_Group_free(&world_group);
@@ -286,7 +296,6 @@ namespace vmafu {
 
                 return Communicator(new_comm, true);
             }
-
         }
     }
 }

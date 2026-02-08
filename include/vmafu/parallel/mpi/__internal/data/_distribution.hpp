@@ -1,8 +1,15 @@
+// parallel/mpi/__internal/data/_distribution.hpp
+
+
 #pragma once
+
 
 #include <mpi.h>
 #include <vector>
-#include <cstddef>
+#include <stdexcept>
+
+#include "../../../../core/_Matrix.hpp"
+
 
 namespace vmafu {
     namespace parallel {
@@ -33,6 +40,7 @@ namespace vmafu {
 
                         int grid_rows;
                         int grid_cols;
+
                         int grid_row;
                         int grid_col;
 
@@ -54,39 +62,37 @@ namespace vmafu {
                         ) const;
                     };
 
-                    // Distribution methods
+                    // Factory methods
 
-                    // Создание 2D сетки процессов
                     static std::pair<int, int> process_grid(
                         int total_procs,
                         size_t rows,
                         size_t cols
                     );
 
-                    // Инициализация информации о распределении
                     static DistributionInfo distribution_info(
+                        DistributionType type,
                         size_t rows,
                         size_t cols,
-                        DistributionType type,
                         const Communicator& comm
                     );
 
-                    // Распределение данных
+                    // Distribution methods
+
                     template <typename T>
                     static void scatter(
-                        const vmafu::Matrix<T>& global,
+                        const Matrix<T>& global,
                         const DistributionInfo& info,
-                        vmafu::Matrix<T>& local,
+                        Matrix<T>& local,
                         int root,
                         const Communicator& comm
                     );
 
-                    // Сбор данных
                     template <typename T>
                     static void gather(
-                        vmafu::Matrix<T>& global,
+                        Matrix<T>& global,
                         const DistributionInfo& info,
-                        const vmafu::Matrix<T>& local,
+                        const Matrix<T>& local,
                         int root,
                         const Communicator& comm
                     );

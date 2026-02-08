@@ -70,10 +70,10 @@ namespace vmafu {
 
                     // Getters
 
-                    int rank() const;
-                    int size() const;
+                    int rank() const noexcept;
+                    int size() const noexcept;
 
-                    MPI_Comm get() const;
+                    MPI_Comm get() const noexcept;
 
                     // Copy/Assignment
 

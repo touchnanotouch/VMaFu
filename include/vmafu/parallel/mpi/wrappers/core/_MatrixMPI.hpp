@@ -43,7 +43,7 @@ namespace vmafu {
                             int root,
                             const Communicator& comm
                         );
-                        
+
                         template <typename U>
                         friend void save_matrix(
                             const std::string& filename,
