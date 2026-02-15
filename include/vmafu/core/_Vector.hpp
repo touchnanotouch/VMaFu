@@ -5,123 +5,87 @@
 
 
 #include <algorithm>
-#include <cmath>
-#include <ostream>
-#include <stdexcept>
+#include <cstddef>
 #include <initializer_list>
+#include <type_traits>
 
 
 namespace vmafu {
-    // Main class
+    namespace core {
+        template <typename T>
+        class Vector {
+            private:
+                T* _data = nullptr;
+                size_t _size = 0;
 
-    template <typename T>
-    class Vector {
-        private:
-            T* _data = nullptr;
-            size_t _size = 0;
+                // Helper methods ( memory managment )
 
-            double _eps = 1e-10;
+                void _allocate(size_t n);
+                void _deallocate() noexcept;
 
-            // Checks
+            public:
+                // Constructors / Destructor
 
-            void _check_index(size_t index) const;
-            void _check_size_match(const Vector& rhs, const char* op) const;
-            void _check_divisor(T scalar) const;
-            void _check_non_empty(const char* op) const;
+                Vector();
+                explicit Vector(size_t size);
+                Vector(size_t size, const T& init_value);
+                Vector(std::initializer_list<T> init_list);
 
-            bool _check_size_equal(const Vector& rhs) const noexcept;
-            bool _check_size_almost_equal(const Vector& rhs) const noexcept;
+                ~Vector();
 
-        public:
-            // Constructors/Destructor
+                // Getters
 
-            Vector();
-            Vector(size_t size);
-            Vector(size_t size, T init_val);
-            Vector(std::initializer_list<T> init);
+                T* data() noexcept;
+                const T* data() const noexcept;
 
-            ~Vector();
+                size_t size() const noexcept;
 
-            // Getters
+                // Setters ( memory managment )
 
-            size_t size() const noexcept;
-            double eps() const noexcept;
-            bool empty() const noexcept;
+                void swap(Vector& other_vector) noexcept;
 
-            // Setters
+                void resize(size_t new_size);
+                void resize(size_t new_size, T fill_value = T());
 
-            void set_eps(double new_eps);
-            void resize(size_t new_size, T value = T());
-            void swap(Vector& other) noexcept;
+                // Copy / Move operators
 
-            // Copy/Move operators
+                Vector(const Vector& other_vector);
+                Vector(Vector&& other_vector) noexcept;
 
-            Vector(const Vector& other);
-            Vector(Vector&& other) noexcept;
-            Vector& operator=(const Vector& other);
-            Vector& operator=(Vector&& other) noexcept;
+                Vector& operator=(const Vector& other_vector);
+                Vector& operator=(Vector&& other_vector) noexcept;
 
-            // Access operators
+                // Access methods
 
-            T& operator[](size_t index);
-            const T& operator[](size_t index) const;
+                T& operator[](size_t index) noexcept;
+                const T& operator[](size_t index) const noexcept;
 
-            // Iterators
+                T& at(size_t index);
+                const T& at(size_t index) const;
 
-            T* begin() noexcept;
-            T* end() noexcept;
-            const T* begin() const noexcept;
-            const T* end() const noexcept;
+                T& front() noexcept;
+                const T& front() const noexcept;
 
-            // Arithmetic operators
+                T& back() noexcept;
+                const T& back() const noexcept;
 
-            Vector operator+(const Vector& rhs) const;
-            Vector operator-(const Vector& rhs) const;
-            Vector operator*(T scalar) const;
-            Vector operator/(T scalar) const;
+                // Iterators
 
-            Vector& operator+=(const Vector& rhs);
-            Vector& operator-=(const Vector& rhs);
-            Vector& operator*=(T scalar);
-            Vector& operator/=(T scalar);
+                T* begin() noexcept;
+                const T* begin() const noexcept;
 
-            // Linear algebra operators
-            
-            T sum() const;
-            T dot(const Vector& rhs) const;
+                T* end() noexcept;
+                const T* end() const noexcept;
 
-            double norm() const;
-            T norm_max() const;
+                // Static methods
 
-            Vector normalized() const;
-            Vector project_onto(const Vector& basis) const;
-
-            bool is_orthogonal_to(const Vector& other) const;
-            bool is_collinear_with(const Vector& other) const;
-
-            Vector element_wise_multiply(const Vector& other) const;
-            Vector linear_combination(const Vector& other, T alpha, T beta) const;
-
-            // Comparison operators
-
-            bool operator==(const Vector& rhs) const;
-            bool operator!=(const Vector& rhs) const;
-
-            // Static methods
-    
-            static Vector unit_vector(size_t size, size_t index);
-            static Vector from_function(size_t size, T (*func)(size_t));
-
-            // Friend methods
-
-            template <typename U>
-            friend std::ostream& operator<<(std::ostream& os, const Vector<U>& v);
-    };
-
-    // External methods
-
-    template <typename T>
-    Vector<T> operator*(T scalar, const Vector<T>& vec);
+                static Vector unit(size_t size, size_t index);
+                static Vector zeros(size_t size);
+                static Vector ones(size_t size);
+                static Vector constant(size_t size, const T& fill_avalue);
+                static Vector from_function(size_t size, T (*func)(T));
+        };
+    }
 }
 
 

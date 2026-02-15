@@ -161,9 +161,10 @@ namespace vmafu {
                                 break;
                             }
                             case DistributionType::BLOCK_2D: {
-                                auto [grid_rows, grid_cols] = process_grid(
-                                    size, rows, cols
-                                );
+                                auto grids = process_grid(size, rows, cols);
+
+                                auto grid_rows = grids.first;
+                                auto grid_cols = grids.second;
 
                                 info.grid_rows = grid_rows;
                                 info.grid_cols = grid_cols;
@@ -377,7 +378,10 @@ namespace vmafu {
 
                                         for (size_t i = 0; i < info.local_rows; i++) {
                                             for (size_t j = 0; j < info.local_cols; j++) {
-                                                auto [global_i, global_j] = info.local_to_global(i, j);
+                                                auto globals = info.local_to_global(i, j);
+
+                                                auto global_i = globals.first;
+                                                auto global_j = globals.second;
 
                                                 local(i, j) = global(global_i, global_j);
                                             }
@@ -586,7 +590,10 @@ namespace vmafu {
 
                                 for (size_t i = 0; i < info.local_rows; i++) {
                                     for (size_t j = 0; j < info.local_cols; j++) {
-                                        auto [global_i, global_j] = info.local_to_global(i, j);
+                                            auto globals = info.local_to_global(i, j);
+
+                                            auto global_i = globals.first;
+                                            auto global_j = globals.second;
 
                                         global(global_i, global_j) = local(i, j);
                                     }

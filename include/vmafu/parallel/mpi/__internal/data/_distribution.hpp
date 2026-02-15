@@ -5,6 +5,7 @@
 
 
 #include <mpi.h>
+#include <cmath>
 #include <vector>
 #include <stdexcept>
 
@@ -21,7 +22,7 @@ namespace vmafu {
                     enum class DistributionType {
                         BLOCK_ROWS,
                         BLOCK_COLS,
-                        BLOCK_2D,        // ( для алгоритма Кэннона )
+                        BLOCK_2D,
                         CYCLIC_ROWS,
                         CYCLIC_COLS
                     };
@@ -98,8 +99,11 @@ namespace vmafu {
                     );
                 }
 
-                using data::process_grid, data::distribution_info;
-                using data::gather, data::scatter;
+                using data::process_grid;
+                using data::distribution_info;
+
+                using data::gather;
+                using data::scatter;
             }
 
             using internal::data::DistributionType;

@@ -4,7 +4,7 @@ set(CMAKE_CXX_STANDARD 17)
 
 # MPI option (passed from Makefile)
 
-option(USE_MPI "Enable MPI support" OFF)
+option(VMAFU_USE_MPI "Enable MPI support" OFF)
 
 # Main library
 
@@ -13,11 +13,11 @@ target_include_directories(vmafu INTERFACE ${CMAKE_SOURCE_DIR}/include)
 
 # Add MPI if enabled
 
-if(USE_MPI)
+if(VMAFU_USE_MPI)
     message(STATUS "MPI support: ENABLED")
     find_package(MPI REQUIRED)
     target_link_libraries(vmafu INTERFACE MPI::MPI_CXX)
-    target_compile_definitions(vmafu INTERFACE USE_MPI)
+    target_compile_definitions(vmafu INTERFACE VMAFU_USE_MPI)
 else()
     message(STATUS "MPI support: DISABLED")
 endif()

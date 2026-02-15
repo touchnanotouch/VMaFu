@@ -52,6 +52,55 @@ namespace vmafu {
                     vmafu::io::save(filename, global_matrix);
                 }
             }
+
+            template <typename T>
+            std::ostream& operator<<(
+                std::ostream& os,
+                const MatrixMPI<T>& matrix
+            ) {
+                const Communicator& comm = matrix.communicator();
+
+                int rank = comm.rank();
+                int size = comm.size();
+
+                for (int i = 0; i < size; i++) {
+                    if (rank == i) {
+                        if (i > 0) {
+                            os << "\n";
+                        }
+
+                        os << "Process " << rank << ":\n" << "( local ) ";
+
+                        core::operator<<(os, matrix.local_matrix());
+
+                        os << std::flush;
+                    }
+
+                    comm.barrier();
+                }
+
+                // TODO: убрать лишние пробелы для ( global ) Matrix
+
+                Matrix<T> global_matrix;
+                if (rank == 0) {
+                    global_matrix = Matrix<T>(
+                        matrix.global_rows(), matrix.global_cols()
+                    );
+                }
+
+                internal::gather(
+                    global_matrix, matrix.dist_info(), matrix.local_matrix(),
+                    0, comm
+                );
+
+                if (rank == 0) {
+                    os << "( global ) ";
+
+                    core::operator<<(os, global_matrix);
+                }
+
+                return os;
+            }
         }
     }
 }

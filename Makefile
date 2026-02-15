@@ -10,7 +10,7 @@ NUM_PROCS ?= 8
 DEMO_EXEC = demo.exe
 MPIEXEC = "C:/Program Files/Microsoft MPI/Bin/mpiexec.exe"
 
-BUILD_TYPE ?= mpi
+BUILD_TYPE ?= nompi
 
 help:
 	@echo "Makefile Commands:"
@@ -50,12 +50,12 @@ build:
 
 build-mpi: $(BUILD_DIR_MPI)
 	@echo "Building MPI version..."
-	@cd $(BUILD_DIR_MPI) && cmake -DUSE_MPI=ON .. && cmake --build .
+	@cd $(BUILD_DIR_MPI) && cmake -DVMAFU_USE_MPI=ON .. && cmake --build .
 	@echo "Build completed: $(BUILD_DIR_MPI)/$(DEMO_EXEC)"
 
 build-nompi: $(BUILD_DIR_NOMPI)
 	@echo "Building non-MPI version..."
-	@cd $(BUILD_DIR_NOMPI) && cmake -DUSE_MPI=OFF .. && cmake --build .
+	@cd $(BUILD_DIR_NOMPI) && cmake -DVMAFU_USE_MPI=OFF .. && cmake --build .
 	@echo "Build completed: $(BUILD_DIR_NOMPI)/$(DEMO_EXEC)"
 
 # Create build directories

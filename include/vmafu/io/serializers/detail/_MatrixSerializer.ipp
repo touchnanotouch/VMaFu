@@ -36,7 +36,7 @@ namespace vmafu {
                     for (size_t j = 0; j < cols; j++) {
                         std::ostringstream oss;
 
-                        if constexpr (std::is_floating_point_v<T>) {
+                        VMAFU_IF_CONSTEXPR(VMAFU_IS_FLOATING_POINT_V(T)) {
                             oss << std::setprecision(_precision);
 
                             double val = static_cast<double>(matrix(i, j));

@@ -6,11 +6,11 @@
 
 #include <string>
 
-#include "wrappers/wrappers.hpp"
-#include "communication/communication.hpp"
-#include "__internal/internal.hpp"
+#include "wrappers/core/_MatrixMPI.hpp"
+#include "__internal/data/_distribution.hpp"
 
 #include "../../core/_Matrix.hpp"
+#include "../../core/_core.hpp"
 #include "../../io/_io.hpp"
 
 
@@ -32,9 +32,15 @@ namespace vmafu {
                 int root = 0,
                 const Communicator& comm = world()
             );
+
+            template <typename T>
+            std::ostream& operator<<(std::ostream& os, const wrappers::MatrixMPI<T>& matrix);
         }
     }
 }
+
+
+using vmafu::parallel::mpi::operator<<;
 
 
 #include "detail/_mpi.ipp"

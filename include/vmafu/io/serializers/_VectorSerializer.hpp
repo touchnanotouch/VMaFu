@@ -14,6 +14,7 @@
 
 #include "_ISerializer.hpp"
 
+#include "../../utils/_compat.hpp"
 #include "../../core/_Vector.hpp"
 
 

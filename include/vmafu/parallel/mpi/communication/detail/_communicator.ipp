@@ -208,50 +208,50 @@ namespace vmafu {
             template <typename T>
             MPI_Datatype Communicator::mpi_type() {
                 static_assert(
-                    std::is_same_v<T, char> ||
-                    std::is_same_v<T, signed char> ||
-                    std::is_same_v<T, unsigned char> ||
-                    std::is_same_v<T, short> ||
-                    std::is_same_v<T, unsigned short> ||
-                    std::is_same_v<T, int> ||
-                    std::is_same_v<T, unsigned int> ||
-                    std::is_same_v<T, long> ||
-                    std::is_same_v<T, unsigned long> ||
-                    std::is_same_v<T, long long> ||
-                    std::is_same_v<T, unsigned long long> ||
-                    std::is_same_v<T, float> ||
-                    std::is_same_v<T, double> ||
-                    std::is_same_v<T, long double>,
-                    "Unsupported type for MPI operations"
+                    VMAFU_IS_SAME_V(T, char) ||
+                    VMAFU_IS_SAME_V(T, signed char) ||
+                    VMAFU_IS_SAME_V(T, unsigned char) ||
+                    VMAFU_IS_SAME_V(T, short) ||
+                    VMAFU_IS_SAME_V(T, unsigned short) ||
+                    VMAFU_IS_SAME_V(T, int) ||
+                    VMAFU_IS_SAME_V(T, unsigned int) ||
+                    VMAFU_IS_SAME_V(T, long) ||
+                    VMAFU_IS_SAME_V(T, unsigned long) ||
+                    VMAFU_IS_SAME_V(T, long long) ||
+                    VMAFU_IS_SAME_V(T, unsigned long long) ||
+                    VMAFU_IS_SAME_V(T, float) ||
+                    VMAFU_IS_SAME_V(T, double) ||
+                    VMAFU_IS_SAME_V(T, long double),
+                    "Communicator::mpi_type(): Unsupported type for MPI operations"
                 );
-                
-                if constexpr (std::is_same_v<T, char>) {
+
+                VMAFU_IF_CONSTEXPR (VMAFU_IS_SAME_V(T, char)) {
                     return MPI_CHAR;
-                } else if constexpr (std::is_same_v<T, signed char>) {
+                } VMAFU_IF_CONSTEXPR (VMAFU_IS_SAME_V(T, signed char)) {
                     return MPI_SIGNED_CHAR;
-                } else if constexpr (std::is_same_v<T, unsigned char>) {
+                } VMAFU_IF_CONSTEXPR (VMAFU_IS_SAME_V(T, unsigned char)) {
                     return MPI_UNSIGNED_CHAR;
-                } else if constexpr (std::is_same_v<T, short>) {
+                } VMAFU_IF_CONSTEXPR (VMAFU_IS_SAME_V(T, short)) {
                     return MPI_SHORT;
-                } else if constexpr (std::is_same_v<T, unsigned short>) {
+                } VMAFU_IF_CONSTEXPR (VMAFU_IS_SAME_V(T, unsigned short)) {
                     return MPI_UNSIGNED_SHORT;
-                } else if constexpr (std::is_same_v<T, int>) {
+                } VMAFU_IF_CONSTEXPR (VMAFU_IS_SAME_V(T, int)) {
                     return MPI_INT;
-                } else if constexpr (std::is_same_v<T, unsigned int>) {
+                } VMAFU_IF_CONSTEXPR (VMAFU_IS_SAME_V(T, unsigned int)) {
                     return MPI_UNSIGNED;
-                } else if constexpr (std::is_same_v<T, long>) {
+                } VMAFU_IF_CONSTEXPR (VMAFU_IS_SAME_V(T, long)) {
                     return MPI_LONG;
-                } else if constexpr (std::is_same_v<T, unsigned long>) {
+                } VMAFU_IF_CONSTEXPR (VMAFU_IS_SAME_V(T, unsigned long)) {
                     return MPI_UNSIGNED_LONG;
-                } else if constexpr (std::is_same_v<T, long long>) {
+                } VMAFU_IF_CONSTEXPR (VMAFU_IS_SAME_V(T, long long)) {
                     return MPI_LONG_LONG_INT;
-                } else if constexpr (std::is_same_v<T, unsigned long long>) {
+                } VMAFU_IF_CONSTEXPR (VMAFU_IS_SAME_V(T, unsigned long long)) {
                     return MPI_UNSIGNED_LONG_LONG;
-                } else if constexpr (std::is_same_v<T, float>) {
+                } VMAFU_IF_CONSTEXPR (VMAFU_IS_SAME_V(T, float)) {
                     return MPI_FLOAT;
-                } else if constexpr (std::is_same_v<T, double>) {
+                } VMAFU_IF_CONSTEXPR (VMAFU_IS_SAME_V(T, double)) {
                     return MPI_DOUBLE;
-                } else if constexpr (std::is_same_v<T, long double>) {
+                } VMAFU_IF_CONSTEXPR (VMAFU_IS_SAME_V(T, long double)) {
                     return MPI_LONG_DOUBLE;
                 }
             }
