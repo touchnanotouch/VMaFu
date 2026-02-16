@@ -38,7 +38,9 @@ namespace vmafu {
                 }
 
                 if (in_quotes) {
-                    throw std::runtime_error("Unclosed quotes in CSV line: " + line);
+                    throw std::runtime_error(
+                        "CsvParser::split_line(): Unclosed quotes in CSV line: " + line
+                    );
                 }
 
                 if (_trim_cells) {

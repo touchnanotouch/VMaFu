@@ -62,6 +62,15 @@ namespace vmafu {
         template <typename T>
         void save(const std::string& filename, const T& data);
     }
+
+    using io::load_vector;
+    using io::load_matrix;
+    
+    using io::save_vector;
+    using io::save_matrix;
+
+    using io::load;
+    using io::save;
 }
 
 

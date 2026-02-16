@@ -74,7 +74,7 @@ namespace vmafu {
                 for (size_t i = 0; i < rows; i++) {
                     if (string_data[i].size() != cols) {
                         throw std::invalid_argument(
-                            "Inconsistent column count in data at row " + 
+                            "MatrixSerializer::deserialize(): Inconsistent column count in data at row " + 
                             std::to_string(i) + 
                             " (expected " + std::to_string(cols) + 
                             ", got " + std::to_string(string_data[i].size()) + ")"
@@ -93,7 +93,7 @@ namespace vmafu {
 
                         if (!(iss >> value)) {
                             throw std::runtime_error(
-                                "Failed to parse value at row " + 
+                                "MatrixSerializer::deserialize(): Failed to parse value at row " + 
                                 std::to_string(i) + ", column " + 
                                 std::to_string(j) + ": " + row[j]
                             );

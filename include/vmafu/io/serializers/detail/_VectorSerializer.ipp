@@ -67,7 +67,7 @@ namespace vmafu {
 
                 if (string_data.size() != 1) {
                     throw std::runtime_error(
-                        "Invalid data format: expected 1 row from serialize(), got " + 
+                        "VectorSerializer::deserialize(): Invalid data format: expected 1 row from serialize(), got " + 
                         std::to_string(string_data.size()) + " rows"
                     );
                 }
@@ -83,7 +83,7 @@ namespace vmafu {
 
                     if (!(iss >> value)) {
                         throw std::runtime_error(
-                            "Failed to parse value at column " + 
+                            "VectorSerializer::deserialize(): Failed to parse value at column " + 
                             std::to_string(i) + ": " + row[i]
                         );
                     }

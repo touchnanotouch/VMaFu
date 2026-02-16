@@ -25,7 +25,9 @@ namespace vmafu {
             ) const {
                 std::ifstream file(filename);
                 if (!file.is_open()) {
-                    throw std::runtime_error("Cannot open file: " + filename);
+                    throw std::runtime_error(
+                        "CsvFormat::read(): Cannot open file: " + filename
+                    );
                 }
 
                 std::string result = read_stream(file);
@@ -72,7 +74,9 @@ namespace vmafu {
             ) const {
                 std::ifstream file(filename);
                 if (!file.is_open()) {
-                    throw std::runtime_error("Cannot open file: " + filename);
+                    throw std::runtime_error(
+                        "CsvFormat::read_chunks(): Cannot open file: " + filename
+                    );
                 }
 
                 std::string result = read_stream_chunks(file, chunk_size);
@@ -107,7 +111,9 @@ namespace vmafu {
             ) const {
                 std::ofstream file(filename);
                 if (!file.is_open()) {
-                    throw std::runtime_error("Cannot open file for writing: " + filename);
+                    throw std::runtime_error(
+                        "CsvFormat::write(): Cannot open file: " + filename
+                    );
                 }
 
                 write_stream(file, content);
@@ -120,13 +126,17 @@ namespace vmafu {
                 const std::string& content
             ) const {
                 if (!validate(content)) {
-                    throw std::runtime_error("Invalid CSV content for stream");
+                    throw std::runtime_error(
+                        "CsvFormat::write_stream(): Invalid CSV content"
+                    );
                 }
                 
                 stream << content;
 
                 if (!stream) {
-                    throw std::runtime_error("Failed to write to stream");
+                    throw std::runtime_error(
+                        "CsvFormat::write_stream(): Failed to write to stream"
+                    );
                 }
             }
 
@@ -137,7 +147,9 @@ namespace vmafu {
                 stream.write(chunk.c_str(), chunk.size());
 
                 if (!stream) {
-                    throw std::runtime_error("Failed to write chunk to stream");
+                    throw std::runtime_error(
+                        "CsvFormat::write_chunk(): Failed to write chunk to stream"
+                    );
                 }
             }
 
@@ -147,12 +159,16 @@ namespace vmafu {
                 size_t chunk_size
             ) const {
                 if (!validate(content)) {
-                    throw std::runtime_error("Invalid CSV content for file: " + filename);
+                    throw std::runtime_error(
+                        "CsvFormat::write_chunks(): Invalid CSV content: " + filename
+                    );
                 }
 
                 std::ofstream file(filename);
                 if (!file.is_open()) {
-                    throw std::runtime_error("Cannot open file for writing: " + filename);
+                    throw std::runtime_error(
+                        "CsvFormat::write_chunks(): Cannot open file: " + filename
+                    );
                 }
 
                 write_stream_chunks(file, content, chunk_size);
@@ -165,7 +181,9 @@ namespace vmafu {
                 size_t chunk_size
             ) const {
                 if (!validate(content)) {
-                    throw std::runtime_error("Invalid CSV content for stream chunks");
+                    throw std::runtime_error(
+                        "CsvFormat::write_stream_chunks(): Invalid CSV content"
+                    );
                 }
 
                 size_t total_size = content.size();
@@ -182,7 +200,9 @@ namespace vmafu {
                 }
 
                 if (!stream) {
-                    throw std::runtime_error("Failed to write chunks to stream");
+                    throw std::runtime_error(
+                        "CsvFormat::write_stream_chunks(): Failed to write chunks to stream"
+                    );
                 }
             }
 
