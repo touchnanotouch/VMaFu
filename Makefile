@@ -9,7 +9,7 @@ NUM_PROCS ?= 8
 
 DEMO_EXEC = demo.exe
 CMAKE_EXEC = "C:/msys64/mingw64/bin/cmake.exe"
-MPI_EXEC = "C:/Program Files/Microsoft MPI/Bin/MPI_EXEC.exe"
+MPI_EXEC = "C:/Program Files/Microsoft MPI/Bin/mpiexec.exe"
 
 BUILD_TYPE ?= nompi
 
