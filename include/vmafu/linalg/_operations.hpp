@@ -26,7 +26,7 @@ namespace vmafu {
         template <typename T>
         Vector<T> operator-(const Vector<T>& lhs, const Vector<T>& rhs);
 
-        // Unary minus (negation)
+        // Unary minus
         
         template <typename T>
         Vector<T> operator-(const Vector<T>& vector);

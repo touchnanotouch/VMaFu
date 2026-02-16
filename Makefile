@@ -8,7 +8,8 @@ BUILD_DIR_NOMPI = build_nompi
 NUM_PROCS ?= 8
 
 DEMO_EXEC = demo.exe
-MPIEXEC = "C:/Program Files/Microsoft MPI/Bin/mpiexec.exe"
+CMAKE_EXEC = "C:/msys64/mingw64/bin/cmake.exe"
+MPI_EXEC = "C:/Program Files/Microsoft MPI/Bin/MPI_EXEC.exe"
 
 BUILD_TYPE ?= nompi
 
@@ -40,7 +41,7 @@ info:
 	@echo "  Non-MPI build dir: $(BUILD_DIR_NOMPI)"
 	@echo "  Executable: $(DEMO_EXEC)"
 	@echo "MPI Configuration:"
-	@echo "  MPI executor: $(MPIEXEC)"
+	@echo "  MPI executor: $(MPI_EXEC)"
 	@echo "  Processes: $(NUM_PROCS)"
 
 # Build targets
@@ -50,12 +51,12 @@ build:
 
 build-mpi: $(BUILD_DIR_MPI)
 	@echo "Building MPI version..."
-	@cd $(BUILD_DIR_MPI) && cmake -DVMAFU_USE_MPI=ON .. && cmake --build .
+	@cd $(BUILD_DIR_MPI) && $(CMAKE_EXEC) -DVMAFU_USE_MPI=ON .. && $(CMAKE_EXEC) --build .
 	@echo "Build completed: $(BUILD_DIR_MPI)/$(DEMO_EXEC)"
 
 build-nompi: $(BUILD_DIR_NOMPI)
 	@echo "Building non-MPI version..."
-	@cd $(BUILD_DIR_NOMPI) && cmake -DVMAFU_USE_MPI=OFF .. && cmake --build .
+	@cd $(BUILD_DIR_NOMPI) && $(CMAKE_EXEC) -DVMAFU_USE_MPI=OFF .. && $(CMAKE_EXEC) --build .
 	@echo "Build completed: $(BUILD_DIR_NOMPI)/$(DEMO_EXEC)"
 
 # Create build directories
@@ -76,7 +77,7 @@ run:
 run-mpi: build-mpi
 	@echo "Running MPI version with $(NUM_PROCS) processes..."
 	@echo "========================================"
-	@$(MPIEXEC) -n $(NUM_PROCS) "./$(BUILD_DIR_MPI)/$(DEMO_EXEC)"
+	@$(MPI_EXEC) -n $(NUM_PROCS) "./$(BUILD_DIR_MPI)/$(DEMO_EXEC)"
 	@echo "========================================"
 	@echo "Execution completed"
 

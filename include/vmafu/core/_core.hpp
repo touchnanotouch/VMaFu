@@ -6,7 +6,7 @@
 
 #include "_Vector.hpp"
 #include "_Matrix.hpp"
-// #include "_Function.hpp"
+#include "_Function.hpp"
 
 
 namespace vmafu {
@@ -16,6 +16,12 @@ namespace vmafu {
 
         template <typename T>
         std::ostream& operator<<(std::ostream& os, const Matrix<T>& matrix);
+
+        template<typename ResultT, typename... ArgTs>
+        std::ostream& operator<<(
+            std::ostream& os,
+            const Function<ResultT, ArgTs...>& function
+        );
     }
 
     using core::Vector;
