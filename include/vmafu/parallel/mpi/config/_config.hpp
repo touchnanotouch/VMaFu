@@ -12,41 +12,43 @@
 namespace vmafu {
     namespace parallel {
         namespace mpi {
-            // Checks
+            namespace config {
+                // Checks
 
-            inline bool is_initialized();
-            inline bool is_finalized();
-            inline bool is_thread_main();
+                inline bool is_initialized();
+                inline bool is_finalized();
+                inline bool is_thread_main();
 
-            // Getters
+                // Getters
 
-            inline std::string processor_name();
-            inline void version(int& version, int& subversion);
+                inline std::string processor_name();
+                inline void version(int& version, int& subversion);
 
-            // Init methods
+                // Init methods
 
-            inline void init();
-            
-            inline void init_thread(
-                int required = MPI_THREAD_SINGLE, 
-                int* provided = nullptr
-            );
+                inline void init();
+                
+                inline void init_thread(
+                    int required = MPI_THREAD_SINGLE, 
+                    int* provided = nullptr
+                );
 
-            inline void init(
-                int& argc,
-                char**& argv
-            );
+                inline void init(
+                    int& argc,
+                    char**& argv
+                );
 
-            inline void init_thread(
-                int& argc,
-                char**& argv, 
-                int required = MPI_THREAD_SINGLE, 
-                int* provided = nullptr
-            );
+                inline void init_thread(
+                    int& argc,
+                    char**& argv, 
+                    int required = MPI_THREAD_SINGLE, 
+                    int* provided = nullptr
+                );
 
-            // Finalize method
+                // Finalize method
 
-            inline void finalize();
+                inline void finalize();
+            }
         }
     }
 }

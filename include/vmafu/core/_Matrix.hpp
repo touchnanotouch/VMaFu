@@ -6,6 +6,7 @@
 
 #include <algorithm>
 #include <cstddef>
+#include <stdexcept>
 #include <initializer_list>
 #include <type_traits>
 

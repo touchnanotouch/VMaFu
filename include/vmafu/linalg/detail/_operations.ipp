@@ -9,7 +9,7 @@ namespace vmafu {
         Vector<T> operator+(const Vector<T>& lhs, const Vector<T>& rhs) {
             if (lhs.size() != rhs.size()) {
                 throw std::invalid_argument(
-                    "linalg::operator+: Vector sizes must match"
+                    "operations::operator+: Vector sizes must match"
                 );
             }
 
@@ -25,7 +25,7 @@ namespace vmafu {
         Vector<T> operator-(const Vector<T>& lhs, const Vector<T>& rhs) {
             if (lhs.size() != rhs.size()) {
                 throw std::invalid_argument(
-                    "linalg::operator-: Vector sizes must match"
+                    "operations::operator-: Vector sizes must match"
                 );
             }
 
@@ -69,13 +69,13 @@ namespace vmafu {
             VMAFU_IF_CONSTEXPR(VMAFU_IS_FLOATING_POINT_V(T)) {
                 if (std::abs(scalar) < 1e-10) {
                     throw std::invalid_argument(
-                        "linalg::operator/: Division by zero"
+                        "operations::operator/: Division by zero"
                     );
                 }
             } else {
                 if (scalar == T{0}) {
                     throw std::invalid_argument(
-                        "linalg::operator/: Division by zero"
+                        "operations::operator/: Division by zero"
                     );
                 }
             }
@@ -129,7 +129,7 @@ namespace vmafu {
         Matrix<T> operator+(const Matrix<T>& lhs, const Matrix<T>& rhs) {
             if (lhs.rows() != rhs.rows() || lhs.cols() != rhs.cols()) {
                 throw std::invalid_argument(
-                    "linalg::operator+: Matrix dimensions must match"
+                    "operations::operator+: Matrix dimensions must match"
                 );
             }
 
@@ -145,7 +145,7 @@ namespace vmafu {
         Matrix<T> operator-(const Matrix<T>& lhs, const Matrix<T>& rhs) {
             if (lhs.rows() != rhs.rows() || lhs.cols() != rhs.cols()) {
                 throw std::invalid_argument(
-                    "linalg::operator-: Matrix dimensions must match"
+                    "operations::operator-: Matrix dimensions must match"
                 );
             }
 
@@ -171,7 +171,7 @@ namespace vmafu {
         Matrix<T> operator*(const Matrix<T>& lhs, const Matrix<T>& rhs) {
             if (lhs.cols() != rhs.rows()) {
                 throw std::invalid_argument(
-                    "linalg::operator*: Incompatible dimensions for matrix multiplication"
+                    "operations::operator*: Incompatible dimensions for matrix multiplication"
                 );
             }
 
@@ -215,13 +215,13 @@ namespace vmafu {
             VMAFU_IF_CONSTEXPR(VMAFU_IS_FLOATING_POINT_V(T)) {
                 if (std::abs(scalar) < 1e-10) {
                     throw std::invalid_argument(
-                        "linalg::operator/: Division by zero"
+                        "operations::operator/: Division by zero"
                     );
                 }
             } else {
                 if (scalar == T{0}) {
                     throw std::invalid_argument(
-                        "linalg::operator/: Division by zero"
+                        "operations::operator/: Division by zero"
                     );
                 }
             }
@@ -275,7 +275,7 @@ namespace vmafu {
         Vector<T> operator*(const Matrix<T>& matrix, const Vector<T>& vector) {
             if (matrix.cols() != vector.size()) {
                 throw std::invalid_argument(
-                    "linalg::operator*: Matrix cols must match vector size"
+                    "operations::operator*: Matrix cols must match vector size"
                 );
             }
 
@@ -296,7 +296,7 @@ namespace vmafu {
         Vector<T> operator*(const Vector<T>& vector, const Matrix<T>& matrix) {
             if (vector.size() != matrix.rows()) {
                 throw std::invalid_argument(
-                    "linalg::operator*: Vector size must match matrix rows"
+                    "operations::operator*: Vector size must match matrix rows"
                 );
             }
 

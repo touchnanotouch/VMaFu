@@ -43,24 +43,6 @@ namespace vmafu {
             const std::string& filename,
             const Matrix<T>& data
         );
-
-        template <typename T>
-        Vector<T> load(
-            const std::string& filename,
-            const Vector<T>&
-        );
-
-        template <typename T>
-        Matrix<T> load(
-            const std::string& filename,
-            const Matrix<T>&
-        );
-
-        template <typename T>
-        T load(const std::string& filename);
-
-        template <typename T>
-        void save(const std::string& filename, const T& data);
     }
 
     using io::load_vector;
@@ -68,9 +50,6 @@ namespace vmafu {
     
     using io::save_vector;
     using io::save_matrix;
-
-    using io::load;
-    using io::save;
 }
 
 

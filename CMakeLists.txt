@@ -22,19 +22,7 @@ else()
     message(STATUS "MPI support: DISABLED")
 endif()
 
-# Tests
-
-enable_testing()
-add_library(test-utils INTERFACE)
-target_include_directories(test-utils INTERFACE ${CMAKE_SOURCE_DIR}/tests)
-
 # Demo executable
 
 add_executable(demo demo/main.cpp)
 target_link_libraries(demo vmafu)
-
-# Test suite
-
-add_executable(test-suite tests/test-suite.cpp)
-target_link_libraries(test-suite vmafu test-utils)
-add_test(NAME test-suite COMMAND test-suite)

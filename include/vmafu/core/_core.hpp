@@ -4,6 +4,9 @@
 #pragma once
 
 
+#include <iostream>
+
+
 #include "_Vector.hpp"
 #include "_Matrix.hpp"
 #include "_Function.hpp"
@@ -23,13 +26,7 @@ namespace vmafu {
             const Function<ResultT, ArgTs...>& function
         );
     }
-
-    using core::Vector;
-    using core::Matrix;
 }
-
-
-using vmafu::core::operator<<;
 
 
 #include "detail/_core.ipp"

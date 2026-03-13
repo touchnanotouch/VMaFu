@@ -4,26 +4,71 @@
 #pragma once
 
 
-// _io.hpp
+#include "config/config.hpp"
+#include "communication/communication.hpp"
+#include "distribution/distribution.hpp"
+#include "containers/containers.hpp"
+#include "utils/utils.hpp"
 
 #include "_mpi.hpp"
 
-// Config
 
-#include "config/config.hpp"
+namespace vmafu {
+    namespace parallel {
+        namespace mpi {
+            // Config
 
-// Communication
+            using config::init;
+            using config::finalize;
 
-#include "communication/communication.hpp"
+            // Communication
 
-// Wrappers
+            using communication::world;
 
-#include "wrappers/wrappers.hpp"
+            using communication::rank;
+            using communication::size;
 
-// Utils
+            using communication::barrier;
+            using communication::broadcast;
 
-#include "utils/utils.hpp"
+            using communication::reduce;
+            using communication::allreduce;
 
-// __Internal (if needed)
+            using communication::allgather;
 
-// #include "__internal/internal.hpp"
+            using communication::Communicator;
+
+            // Distribution
+
+            using distribution::VectorDistributionType;
+            using distribution::VectorDistributionInfo;
+            using distribution::vector_distribution_info;
+
+            using distribution::MatrixDistributionType;
+            using distribution::MatrixDistributionInfo;
+            using distribution::matrix_distribution_info;
+
+            using distribution::scatter;
+            using distribution::gather;
+
+            // Containers
+
+            using containers::MatrixMPI;
+            using containers::VectorMPI;
+            using containers::MultiplicationMethod;
+
+            // _mpi.hpp
+
+            using mpi::load_vector;
+            using mpi::load_matrix;
+
+            using mpi::save_vector;
+            using mpi::save_matrix;
+        }
+    }
+}
+
+
+// _mpi.hpp
+
+using vmafu::parallel::mpi::operator<<;

@@ -104,38 +104,5 @@ namespace vmafu {
                 filename, parser->unparse(serializer->serialize(data))
             );
         }
-
-        template <typename T>
-        Vector<T> load(
-            const std::string& filename,
-            const Vector<T>&
-        ) {
-            return load_vector<T>(filename);
-        }
-
-        template <typename T>
-        Matrix<T> load(
-            const std::string& filename,
-            const Matrix<T>&
-        ) {
-            return load_matrix<T>(filename);
-        }
-
-        template <typename T>
-        T load(const std::string& filename) {
-            return load(filename, T{});
-        }
-
-        template <typename T>
-        void save(const std::string& filename, const T& data) {
-            FormatPtr format = create_format(filename);
-            ParserPtr parser = create_parser(filename);
-
-            auto serializer = create_serializer(data);
-
-            format->write(
-                filename, parser->unparse(serializer->serialize(data))
-            );
-        }
     }
 }

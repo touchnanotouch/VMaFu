@@ -5,13 +5,42 @@ namespace vmafu {
     namespace parallel {
         namespace mpi {
             template <typename T>
-            MatrixMPI<T> load_matrix(
+            containers::VectorMPI<T> load_vector(
                 const std::string& filename,
-                DistributionType dist_type,
+                distribution::VectorDistributionType dist_type,
                 int root,
-                const Communicator& comm
+                const communication::Communicator& comm
             ) {
-                Matrix<T> global_matrix;
+                vmafu::core::Vector<T> global_vector;
+
+                if (comm.rank() == root) {
+                    global_vector = vmafu::io::load_vector<T>(filename);
+                }
+
+                size_t size = 0;
+                if (comm.rank() == root) {
+                    size = global_vector.size();
+                }
+
+                comm.broadcast(&size, 1, root);
+
+                auto dist_info = distribution::vector_distribution_info(
+                    dist_type, size, comm
+                );
+
+                return containers::VectorMPI<T>(
+                    global_vector, dist_info, root, comm
+                );
+            }
+
+            template <typename T>
+            containers::MatrixMPI<T> load_matrix(
+                const std::string& filename,
+                distribution::MatrixDistributionType dist_type,
+                int root,
+                const communication::Communicator& comm
+            ) {
+                vmafu::core::Matrix<T> global_matrix;
 
                 if (comm.rank() == root) {
                     global_matrix = io::load_matrix<T>(filename);
@@ -25,78 +54,132 @@ namespace vmafu {
 
                 comm.broadcast(dims, 2, root);
 
-                auto dist_info = distribution_info(
-                     dist_type, dims[0], dims[1], comm
+                auto dist_info = distribution::matrix_distribution_info(
+                    dist_type, dims[0], dims[1], comm
                 );
 
-                // На ненулевых процессах global_matrix пустая, но это нормально
+                return containers::MatrixMPI<T>(
+                    global_matrix, dist_info, root, comm
+                );
+            }
 
-                return MatrixMPI<T>(global_matrix, dist_info, root, comm);
+            template <typename T>
+            void save_vector(
+                const std::string& filename,
+                const containers::VectorMPI<T>& vector,
+                int root,
+                const communication::Communicator& comm
+            ) {
+                vmafu::core::Vector<T> global_vector;
+
+                distribution::gather(
+                    global_vector, vector.distribution_info(), vector.local_vector(),
+                    root, comm
+                );
+
+                if (comm.rank() == root) {
+                    vmafu::io::save_vector(filename, global_vector);
+                }
             }
 
             template <typename T>
             void save_matrix(
                 const std::string& filename,
-                const wrappers::MatrixMPI<T>& matrix,
+                const containers::MatrixMPI<T>& matrix,
                 int root,
-                const Communicator& comm 
+                const communication::Communicator& comm 
             ) {
-                Matrix<T> global_matrix;
+                vmafu::core::Matrix<T> global_matrix;
 
-                gather(
-                    global_matrix, matrix.dist_info(), matrix.local_matrix(),
+                distribution::gather(
+                    global_matrix, matrix.distribution_info(), matrix.local_matrix(),
                     root, comm
                 );
 
                 if (comm.rank() == root) {
-                    vmafu::io::save(filename, global_matrix);
+                    vmafu::io::save_matrix(filename, global_matrix);
                 }
             }
 
             template <typename T>
             std::ostream& operator<<(
                 std::ostream& os,
-                const MatrixMPI<T>& matrix
+                const containers::VectorMPI<T>& vector
             ) {
-                const Communicator& comm = matrix.communicator();
+                const communication::Communicator& comm = vector.communicator();
 
                 int rank = comm.rank();
                 int size = comm.size();
 
                 for (int i = 0; i < size; i++) {
                     if (rank == i) {
-                        if (i > 0) {
-                            os << "\n";
-                        }
+                        os << "Process " << rank << ":";
+                        os << "\n( local ) ";
 
-                        os << "Process " << rank << ":\n" << "( local ) ";
+                        vmafu::core::operator<<(os, vector.local_vector());
 
-                        core::operator<<(os, matrix.local_matrix());
-
-                        os << std::flush;
+                        os << "\n";
                     }
 
                     comm.barrier();
                 }
 
-                // TODO: убрать лишние пробелы для ( global ) Matrix
-
-                Matrix<T> global_matrix;
+                vmafu::core::Vector<T> global_vector;
                 if (rank == 0) {
-                    global_matrix = Matrix<T>(
-                        matrix.global_rows(), matrix.global_cols()
-                    );
+                    global_vector = vmafu::core::Vector<T>(vector.global_size());
                 }
 
-                internal::gather(
-                    global_matrix, matrix.dist_info(), matrix.local_matrix(),
+                distribution::gather(
+                    global_vector, vector.distribution_info(), vector.local_vector(),
                     0, comm
                 );
 
                 if (rank == 0) {
-                    os << "( global ) ";
+                    os << "\n( global ) ";
+                    vmafu::core::operator<<(os, global_vector);
+                }
 
-                    core::operator<<(os, global_matrix);
+                return os;
+            }
+
+            template <typename T>
+            std::ostream& operator<<(
+                std::ostream& os,
+                const containers::MatrixMPI<T>& matrix
+            ) {
+                const communication::Communicator& comm = matrix.communicator();
+
+                int rank = comm.rank();
+                int size = comm.size();
+
+                for (int i = 0; i < size; i++) {
+                    if (rank == i) {
+                        os << "Process " << rank << ":";
+                        os << "\n( local ) ";
+
+                        vmafu::core::operator<<(os, matrix.local_matrix());
+
+                        os << "\n";
+                    }
+
+                    comm.barrier();
+                }
+
+                vmafu::core::Matrix<T> global_matrix;
+                if (rank == 0) {
+                    global_matrix = vmafu::core::Matrix<T>(
+                        matrix.global_rows(), matrix.global_cols()
+                    );
+                }
+
+                distribution::gather(
+                    global_matrix, matrix.distribution_info(), matrix.local_matrix(),
+                    0, comm
+                );
+
+                if (rank == 0) {
+                    os << "\n( global ) ";
+                    vmafu::core::operator<<(os, global_matrix);
                 }
 
                 return os;

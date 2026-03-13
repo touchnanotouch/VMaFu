@@ -1,0 +1,79 @@
+// parallel/mpi/containers/_VectorMPI.hpp
+
+
+#pragma once
+
+
+#include "../../../core/_Vector.hpp"
+
+#include "../communication/communication.hpp"
+#include "../distribution/distribution.hpp"
+
+
+namespace vmafu {
+    namespace parallel {
+        namespace mpi {
+            namespace containers {
+                // VectorMPI class
+
+                template <typename T>
+                class VectorMPI {
+                    private:
+                        communication::Communicator _comm;
+                        Vector<T> _local_vector;
+                        distribution::VectorDistributionInfo _dist_info;
+
+                        // Friend methods
+
+                        template <typename U>
+                        friend VectorMPI<U> load_vector(
+                            const std::string& filename,
+                            distribution::VectorDistributionType dist_type,
+                            int root,
+                            const communication::Communicator& comm
+                        );
+
+                        template <typename U>
+                        friend void save_vector(
+                            const std::string& filename,
+                            const VectorMPI<U>& vector,
+                            int root,
+                            const communication::Communicator& comm
+                        );
+
+                    protected:
+                        // Setters
+
+                        void set_comm(const communication::Communicator& comm);
+                        void set_local_vector(const Vector<T>& vector);
+                        void set_dist_info(const distribution::VectorDistributionInfo& dist_info);
+
+                    public:
+                        // Constructors
+
+                        VectorMPI();
+                        VectorMPI(const communication::Communicator& comm);
+
+                        VectorMPI(
+                            const Vector<T>& global_vector,
+                            distribution::VectorDistributionInfo dist_info,
+                            int root = 0,
+                            const communication::Communicator& comm = communication::world()
+                        );
+
+                        // Getters
+
+                        const communication::Communicator& communicator() const noexcept;
+                        const Vector<T>& local_vector() const noexcept;
+                        const distribution::VectorDistributionInfo& distribution_info() const noexcept;
+
+                        size_t local_size() const noexcept;
+                        size_t global_size() const noexcept;
+                };
+            }
+        }
+    }
+}
+
+
+#include "detail/_VectorMPI.ipp"
