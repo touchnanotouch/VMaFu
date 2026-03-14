@@ -8,6 +8,7 @@
 #include "communication/communication.hpp"
 #include "distribution/distribution.hpp"
 #include "containers/containers.hpp"
+#include "linalg/linalg.hpp"
 #include "utils/utils.hpp"
 
 #include "_mpi.hpp"
@@ -53,9 +54,12 @@ namespace vmafu {
 
             // Containers
 
-            using containers::MatrixMPI;
             using containers::VectorMPI;
-            using containers::MultiplicationMethod;
+            using containers::MatrixMPI;
+
+            // Linalg
+
+            // using linalg::multiply;
 
             // _mpi.hpp
 

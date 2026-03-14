@@ -4,6 +4,8 @@
 #pragma once
 
 
+#include <string>
+
 #include "../../../core/_Vector.hpp"
 
 #include "../communication/communication.hpp"
@@ -14,14 +16,12 @@ namespace vmafu {
     namespace parallel {
         namespace mpi {
             namespace containers {
-                // VectorMPI class
-
                 template <typename T>
                 class VectorMPI {
                     private:
-                        communication::Communicator _comm;
-                        Vector<T> _local_vector;
+                        vmafu::core::Vector<T> _local_vector;
                         distribution::VectorDistributionInfo _dist_info;
+                        communication::Communicator _comm;
 
                         // Friend methods
 
@@ -41,13 +41,6 @@ namespace vmafu {
                             const communication::Communicator& comm
                         );
 
-                    protected:
-                        // Setters
-
-                        void set_comm(const communication::Communicator& comm);
-                        void set_local_vector(const Vector<T>& vector);
-                        void set_dist_info(const distribution::VectorDistributionInfo& dist_info);
-
                     public:
                         // Constructors
 
@@ -55,7 +48,7 @@ namespace vmafu {
                         VectorMPI(const communication::Communicator& comm);
 
                         VectorMPI(
-                            const Vector<T>& global_vector,
+                            const vmafu::core::Vector<T>& global_vector,
                             distribution::VectorDistributionInfo dist_info,
                             int root = 0,
                             const communication::Communicator& comm = communication::world()
@@ -63,12 +56,24 @@ namespace vmafu {
 
                         // Getters
 
-                        const communication::Communicator& communicator() const noexcept;
-                        const Vector<T>& local_vector() const noexcept;
+                        const vmafu::core::Vector<T>& local_vector() const noexcept;
                         const distribution::VectorDistributionInfo& distribution_info() const noexcept;
+                        const communication::Communicator& communicator() const noexcept;
 
                         size_t local_size() const noexcept;
                         size_t global_size() const noexcept;
+
+                        // Setters
+
+                        void set_local_vector(
+                            const vmafu::core::Vector<T>& vector
+                        );
+                        void set_dist_info(
+                            const distribution::VectorDistributionInfo& dist_info
+                        );
+                        void set_comm(
+                            const communication::Communicator& comm
+                        );
                 };
             }
         }

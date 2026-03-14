@@ -4,7 +4,10 @@
 #pragma once
 
 
+#include <string>
+
 #include "../../../core/_Matrix.hpp"
+
 #include "../communication/communication.hpp"
 #include "../distribution/distribution.hpp"
 
@@ -13,25 +16,12 @@ namespace vmafu {
     namespace parallel {
         namespace mpi {            
             namespace containers {
-                // Multiplications enum
-
-                enum class MultiplicationMethod {
-                    SIMPLE,          // Scatter-Gather
-                    CANNON          // Алгоритм Кэннона (для квадратных)
-                };
-
-                // MatrixMPI class
-
                 template <typename T>
                 class MatrixMPI {
                     private:
-                        communication::Communicator _comm;
-                        Matrix<T> _local_matrix;
+                        vmafu::core::Matrix<T> _local_matrix;
                         distribution::MatrixDistributionInfo _dist_info;
-
-                        // Helper methods
-
-                        MatrixMPI<T> multiply_simple(const MatrixMPI<T>& other, int root) const;
+                        communication::Communicator _comm;
 
                         // Friend methods
 
@@ -51,13 +41,6 @@ namespace vmafu {
                             const communication::Communicator& comm
                         );
 
-                    protected:
-                        // Setters
-
-                        void set_comm(const communication::Communicator& comm);
-                        void set_local_matrix(const Matrix<T>& matrix);
-                        void set_dist_info(const distribution::MatrixDistributionInfo& dist_info);
-                        
                     public:
                         // Constructors
 
@@ -65,7 +48,7 @@ namespace vmafu {
                         MatrixMPI(const communication::Communicator& comm);
 
                         MatrixMPI(
-                            const Matrix<T>& global_matrix,
+                            const vmafu::core::Matrix<T>& global_matrix,
                             distribution::MatrixDistributionInfo dist_info,
                             int root = 0,
                             const communication::Communicator& comm = communication::world()
@@ -73,9 +56,9 @@ namespace vmafu {
 
                         // Getters
 
-                        const communication::Communicator& communicator() const noexcept;
-                        const Matrix<T>& local_matrix() const noexcept;
+                        const vmafu::core::Matrix<T>& local_matrix() const noexcept;
                         const distribution::MatrixDistributionInfo& distribution_info() const noexcept;
+                        const communication::Communicator& communicator() const noexcept;
 
                         size_t local_rows() const noexcept;
                         size_t local_cols() const noexcept;
@@ -83,13 +66,17 @@ namespace vmafu {
                         size_t global_rows() const noexcept;
                         size_t global_cols() const noexcept;
 
-                        // MPI methods
+                        // Setters
 
-                        MatrixMPI<T> multiply(
-                            const MatrixMPI<T>& other,
-                            MultiplicationMethod method = MultiplicationMethod::SIMPLE,
-                            int root = 0
-                        ) const;
+                        void set_local_matrix(
+                            const vmafu::core::Matrix<T>& matrix
+                        );
+                        void set_dist_info(
+                            const distribution::MatrixDistributionInfo& dist_info
+                        );
+                        void set_comm(
+                            const communication::Communicator& comm
+                        );
                 };
             }
         }

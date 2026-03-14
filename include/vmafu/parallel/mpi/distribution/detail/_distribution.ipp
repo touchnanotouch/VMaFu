@@ -5,6 +5,7 @@ namespace vmafu {
     namespace parallel {
         namespace mpi {
             namespace distribution {
+
                 // Struct methods
 
                 bool MatrixDistributionInfo::is_global_element_owner(
@@ -66,7 +67,7 @@ namespace vmafu {
                     size_t size,
                     const communication::Communicator& comm
                 ) {
-                    int rank = comm.rank();
+                    int comm_rank = comm.rank();
                     int comm_size = comm.size();
 
                     VectorDistributionInfo info;
@@ -80,11 +81,11 @@ namespace vmafu {
                             size_t remainder = size % comm_size;
 
                             info.local_size = block_size + (
-                                rank < remainder ? 1 : 0
+                                comm_rank < remainder ? 1 : 0
                             );
                             info.offset = 0;
 
-                            for (int i = 0; i < rank; i++) {
+                            for (int i = 0; i < comm_rank; i++) {
                                 info.offset += block_size + (
                                     i < remainder ? 1 : 0
                                 );
@@ -93,7 +94,6 @@ namespace vmafu {
                             break;
                         }
                         case VectorDistributionType::CYCLIC: {
-                            // TODO: реализовать
                             throw std::runtime_error(
                                 "distribution::vector_distribution_info(): CYCLIC not implemented yet"
                             );
@@ -114,8 +114,8 @@ namespace vmafu {
                     size_t cols,
                     const communication::Communicator& comm
                 ) {
-                    int rank = comm.rank();
-                    int size = comm.size();
+                    int comm_rank = comm.rank();
+                    int comm_size = comm.size();
 
                     MatrixDistributionInfo info;
 
@@ -125,17 +125,17 @@ namespace vmafu {
 
                     switch(type) {
                         case MatrixDistributionType::BLOCK_ROWS: {
-                            size_t block_size = rows / size;
-                            size_t remainder = rows % size;
+                            size_t block_size = rows / comm_size;
+                            size_t remainder = rows % comm_size;
                             
                             info.local_rows = block_size + (
-                                rank < remainder ? 1 : 0
+                                comm_rank < remainder ? 1 : 0
                             );
                             info.local_cols = cols;
 
                             info.row_offset = 0;
-                            for (int i = 0; i < rank; i++) {
-                                size_t prev_block = rows / size + (
+                            for (int i = 0; i < comm_rank; i++) {
+                                size_t prev_block = rows / comm_size + (
                                     i < remainder ? 1 : 0
                                 );
 
@@ -143,25 +143,25 @@ namespace vmafu {
                             }
                             
                             info.col_offset = 0;
-                            info.grid_rows = size;
+                            info.grid_rows = comm_size;
                             info.grid_cols = 1;
-                            info.grid_row = rank;
+                            info.grid_row = comm_rank;
                             info.grid_col = 0;
 
                             break;
                         }
                         case MatrixDistributionType::BLOCK_COLS: {
-                            size_t block_size = cols / size;
-                            size_t remainder = cols % size;
+                            size_t block_size = cols / comm_size;
+                            size_t remainder = cols % comm_size;
 
                             info.local_rows = rows;
                             info.local_cols = block_size + (
-                                rank < remainder ? 1 : 0
+                                comm_rank < remainder ? 1 : 0
                             );
 
                             info.col_offset = 0;
-                            for (int i = 0; i < rank; i++) {
-                                size_t prev_block = cols / size + (
+                            for (int i = 0; i < comm_rank; i++) {
+                                size_t prev_block = cols / comm_size + (
                                     i < remainder ? 1 : 0
                                 );
 
@@ -170,21 +170,21 @@ namespace vmafu {
 
                             info.row_offset = 0;
                             info.grid_rows = 1;
-                            info.grid_cols = size;
+                            info.grid_cols = comm_size;
                             info.grid_row = 0;
-                            info.grid_col = rank;
+                            info.grid_col = comm_rank;
 
                             break;
                         }
                         case MatrixDistributionType::BLOCK_2D: {
-                            auto grids = process_grid(size, rows, cols);
+                            auto grids = process_grid(comm_size, rows, cols);
                             auto grid_rows = grids.first;
                             auto grid_cols = grids.second;
 
                             info.grid_rows = grid_rows;
                             info.grid_cols = grid_cols;
-                            info.grid_row = rank / grid_cols;
-                            info.grid_col = rank % grid_cols;
+                            info.grid_row = comm_rank / grid_cols;
+                            info.grid_col = comm_rank % grid_cols;
                             
                             size_t rows_per_proc = rows / grid_rows;
                             size_t rows_remainder = rows % grid_rows;
@@ -256,10 +256,10 @@ namespace vmafu {
                     int root,
                     const communication::Communicator& comm
                 ) {
-                    int rank = comm.rank();
+                    int comm_rank = comm.rank();
                     int comm_size = comm.size();
 
-                    if (rank == root) {
+                    if (comm_rank == root) {
                         if (global.size() != info.global_size) {
                             throw std::invalid_argument(
                                 "distribution::scatter(): Global vector size does not match distribution info"
@@ -298,7 +298,7 @@ namespace vmafu {
                     }
 
                     comm.scatterv(
-                        (rank == root) ? global.data() : nullptr,
+                        (comm_rank == root) ? global.data() : nullptr,
                         sendcounts.data(),
                         scatter_displs.data(),
                         local.data(),
@@ -315,10 +315,10 @@ namespace vmafu {
                     int root,
                     const communication::Communicator& comm
                 ) {
-                    int rank = comm.rank();
-                    int size = comm.size();
+                    int comm_rank = comm.rank();
+                    int comm_size = comm.size();
 
-                    if (rank == root) {
+                    if (comm_rank == root) {
                         if (
                             global.rows() != info.global_rows || 
                             global.cols() != info.global_cols
@@ -333,15 +333,15 @@ namespace vmafu {
                         info.local_rows, info.local_cols
                     );
 
-                    vmafu::core::Vector<size_t> all_local_rows(size);
-                    vmafu::core::Vector<size_t> all_local_cols(size);
-                    vmafu::core::Vector<size_t> all_row_offsets(size);
-                    vmafu::core::Vector<size_t> all_col_offsets(size);
+                    vmafu::core::Vector<size_t> all_local_rows(comm_size);
+                    vmafu::core::Vector<size_t> all_local_cols(comm_size);
+                    vmafu::core::Vector<size_t> all_row_offsets(comm_size);
+                    vmafu::core::Vector<size_t> all_col_offsets(comm_size);
 
-                    vmafu::core::Vector<int> recvcounts(size, 1);
-                    vmafu::core::Vector<int> displs(size);
+                    vmafu::core::Vector<int> recvcounts(comm_size, 1);
+                    vmafu::core::Vector<int> displs(comm_size);
 
-                    for (int i = 0; i < size; i++) {
+                    for (int i = 0; i < comm_size; i++) {
                         displs[i] = i;
                     }
 
@@ -362,10 +362,10 @@ namespace vmafu {
                         recvcounts.data(), displs.data()
                     );
 
-                    vmafu::core::Vector<int> sendcounts(size);
-                    vmafu::core::Vector<int> scatter_displs(size);
+                    vmafu::core::Vector<int> sendcounts(comm_size);
+                    vmafu::core::Vector<int> scatter_displs(comm_size);
 
-                    for (int i = 0; i < size; i++) {
+                    for (int i = 0; i < comm_size; i++) {
                         switch(info.type) {
                             case MatrixDistributionType::BLOCK_ROWS: {
                                 sendcounts[i] = static_cast<int>(
@@ -402,16 +402,13 @@ namespace vmafu {
                         }
                     }
 
-                    if (info.type == MatrixDistributionType::BLOCK_2D) {                            
-                        if (rank == root) {
-                            // Root процесс рассылает данные всем
-
-                            for (int dest = 0; dest < size; dest++) {
-                                if (dest == rank) {
+                    if (info.type == MatrixDistributionType::BLOCK_2D) {
+                        if (comm_rank == root) {
+                            for (int dest = 0; dest < comm_size; dest++) {
+                                if (dest == comm_rank) {
                                     for (size_t i = 0; i < info.local_rows; i++) {
                                         for (size_t j = 0; j < info.local_cols; j++) {
                                             auto globals = info.local_to_global(i, j);
-
                                             local(i, j) = global(globals.first, globals.second);
                                         }
                                     }
@@ -429,21 +426,13 @@ namespace vmafu {
                                         }
                                     }
 
-                                    comm.send(
-                                        send_buffer.data(), sendcounts[dest],
-                                        dest, 0
-                                    );
+                                    comm.send(send_buffer.data(), sendcounts[dest], dest, 0);
                                 }
                             }
-                        } else if (sendcounts[rank] > 0) {
-                            // Получаем данные от root процесса
+                        } else if (sendcounts[comm_rank] > 0) {
+                            vmafu::core::Vector<T> recv_buffer(sendcounts[comm_rank]);
 
-                            vmafu::core::Vector<T> recv_buffer(sendcounts[rank]);
-
-                            comm.recv(
-                                recv_buffer.data(), sendcounts[rank],
-                                root, 0
-                            );
+                            comm.recv(recv_buffer.data(), sendcounts[comm_rank], root, 0);
 
                             for (size_t i = 0; i < info.local_rows; i++) {
                                 for (size_t j = 0; j < info.local_cols; j++) {
@@ -451,11 +440,51 @@ namespace vmafu {
                                 }
                             }
                         }
-                    } else {
-                        // Для BLOCK_ROWS и BLOCK_COLS используем scatterv
+                    } else if (info.type == MatrixDistributionType::BLOCK_COLS) {
+                        if (comm_rank == root) {
+                            for (int dest = 0; dest < comm_size; dest++) {
+                                size_t col_start = all_col_offsets[dest];
+                                size_t local_cols = all_local_cols[dest];
 
+                                if (dest == comm_rank) {
+                                    for (size_t i = 0; i < info.global_rows; i++) {
+                                        for (size_t j = 0; j < local_cols; j++) {
+                                            local(i, j) = global(i, col_start + j);
+                                        }
+                                    }
+                                } else {
+                                    vmafu::core::Vector<T> send_buffer(info.global_rows * local_cols);
+                                    for (size_t i = 0; i < info.global_rows; i++) {
+                                        for (size_t j = 0; j < local_cols; j++) {
+                                            send_buffer[i * local_cols + j] = global(i, col_start + j);
+                                        }
+                                    }
+
+                                    comm.send(
+                                        send_buffer.data(), static_cast<int>(send_buffer.size()),
+                                        dest, 0
+                                    );
+                                }
+                            }
+                        } else {
+                            size_t local_cols = info.local_cols;
+
+                            vmafu::core::Vector<T> recv_buffer(info.global_rows * local_cols);
+
+                            comm.recv(
+                                recv_buffer.data(), static_cast<int>(recv_buffer.size()),
+                                root, 0
+                            );
+                            
+                            for (size_t i = 0; i < info.global_rows; i++) {
+                                for (size_t j = 0; j < local_cols; j++) {
+                                    local(i, j) = recv_buffer[i * local_cols + j];
+                                }
+                            }
+                        }
+                    } else {
                         comm.scatterv(
-                            (rank == root) ? global.data() : nullptr,
+                            (comm_rank == root) ? global.data() : nullptr,
                             sendcounts.data(),
                             scatter_displs.data(),
                             local.data(),
@@ -473,7 +502,7 @@ namespace vmafu {
                     int root,
                     const communication::Communicator& comm
                 ) {
-                    int rank = comm.rank();
+                    int comm_rank = comm.rank();
                     int comm_size = comm.size();
 
                     if (local.size() != info.local_size) {
@@ -510,14 +539,14 @@ namespace vmafu {
                         gather_displs[i] = static_cast<int>(all_offsets[i]);
                     }
 
-                    if (rank == root) {
+                    if (comm_rank == root) {
                         global = vmafu::core::Vector<T>(info.global_size);
                     }
 
                     comm.gatherv(
                         local.data(),
                         static_cast<int>(info.local_size),
-                        (rank == root) ? global.data() : nullptr,
+                        (comm_rank == root) ? global.data() : nullptr,
                         gather_recvcounts.data(),
                         gather_displs.data(),
                         root
@@ -532,8 +561,8 @@ namespace vmafu {
                     int root,
                     const communication::Communicator& comm
                 ) {
-                    int rank = comm.rank();
-                    int size = comm.size();
+                    int comm_rank = comm.rank();
+                    int comm_size = comm.size();
 
                     if (local.rows() != info.local_rows || 
                         local.cols() != info.local_cols) {
@@ -542,15 +571,15 @@ namespace vmafu {
                         );
                     }
 
-                    vmafu::core::Vector<size_t> all_local_rows(size);
-                    vmafu::core::Vector<size_t> all_local_cols(size);
-                    vmafu::core::Vector<size_t> all_row_offsets(size);
-                    vmafu::core::Vector<size_t> all_col_offsets(size);
+                    vmafu::core::Vector<size_t> all_local_rows(comm_size);
+                    vmafu::core::Vector<size_t> all_local_cols(comm_size);
+                    vmafu::core::Vector<size_t> all_row_offsets(comm_size);
+                    vmafu::core::Vector<size_t> all_col_offsets(comm_size);
 
-                    vmafu::core::Vector<int> recvcounts(size, 1);
-                    vmafu::core::Vector<int> displs(size);
+                    vmafu::core::Vector<int> recvcounts(comm_size, 1);
+                    vmafu::core::Vector<int> displs(comm_size);
 
-                    for (int i = 0; i < size; i++) {
+                    for (int i = 0; i < comm_size; i++) {
                         displs[i] = i;
                     }
 
@@ -571,10 +600,10 @@ namespace vmafu {
                         recvcounts.data(), displs.data()
                     );
 
-                    vmafu::core::Vector<int> gather_recvcounts(size);
-                    vmafu::core::Vector<int> gather_displs(size);
+                    vmafu::core::Vector<int> gather_recvcounts(comm_size);
+                    vmafu::core::Vector<int> gather_displs(comm_size);
 
-                    for (int i = 0; i < size; i++) {
+                    for (int i = 0; i < comm_size; i++) {
                         switch(info.type) {
                             case MatrixDistributionType::BLOCK_ROWS: {
                                 gather_recvcounts[i] = static_cast<int>(
@@ -612,35 +641,27 @@ namespace vmafu {
                     }
 
                     if (info.type == MatrixDistributionType::BLOCK_2D) {
-                        if (rank == root) {
+                        if (comm_rank == root) {
                             global = Matrix<T>(info.global_rows, info.global_cols);
-                            
-                            // Сначала обрабатываем локальные данные
 
                             for (size_t i = 0; i < info.local_rows; i++) {
                                 for (size_t j = 0; j < info.local_cols; j++) {
                                     auto globals = info.local_to_global(i, j);
-
                                     global(globals.first, globals.second) = local(i, j);
                                 }
                             }
-                            
-                            // Затем получаем данные от других процессов
 
-                            for (int src = 0; src < size; src++) {
-                                if (src != rank && gather_recvcounts[src] > 0) {
+                            for (int src = 0; src < comm_size; src++) {
+                                if (src != comm_rank && gather_recvcounts[src] > 0) {
                                     vmafu::core::Vector<T> recv_buffer(gather_recvcounts[src]);
 
-                                    comm.recv(
-                                        recv_buffer.data(), gather_recvcounts[src],
-                                        src, 0
-                                    );
+                                    comm.recv(recv_buffer.data(), gather_recvcounts[src], src, 0);
 
                                     size_t rows = all_local_rows[src];
                                     size_t cols = all_local_cols[src];
                                     size_t row_start = all_row_offsets[src];
                                     size_t col_start = all_col_offsets[src];
-                                    
+
                                     for (size_t i = 0; i < rows; i++) {
                                         for (size_t j = 0; j < cols; j++) {
                                             global(row_start + i, col_start + j) = recv_buffer[i * cols + j];
@@ -648,29 +669,74 @@ namespace vmafu {
                                     }
                                 }
                             }
-                        } else if (gather_recvcounts[rank] > 0) {
-                            vmafu::core::Vector<T> send_buffer(gather_recvcounts[rank]);
-                            
+                        } else if (gather_recvcounts[comm_rank] > 0) {
+                            vmafu::core::Vector<T> send_buffer(gather_recvcounts[comm_rank]);
+
                             for (size_t i = 0; i < info.local_rows; i++) {
                                 for (size_t j = 0; j < info.local_cols; j++) {
                                     send_buffer[i * info.local_cols + j] = local(i, j);
                                 }
                             }
-                            
-                            comm.send(
-                                send_buffer.data(), gather_recvcounts[rank],
-                                root, 0
+
+                            comm.send(send_buffer.data(), gather_recvcounts[comm_rank], root, 0);
+                        }
+                    } else if (info.type == MatrixDistributionType::BLOCK_COLS) {
+                        if (comm_rank == root) {
+                            global = Matrix<T>(info.global_rows, info.global_cols);
+
+                            size_t col_start = info.col_offset;
+                            size_t local_cols = info.local_cols;
+
+                            for (size_t i = 0; i < info.global_rows; i++) {
+                                for (size_t j = 0; j < local_cols; j++) {
+                                    global(i, col_start + j) = local(i, j);
+                                }
+                            }
+
+                            for (int src = 0; src < comm_size; src++) {
+                                if (src != comm_rank) {
+                                    size_t src_col_start = all_col_offsets[src];
+                                    size_t src_local_cols = all_local_cols[src];
+
+                                    int recv_count = static_cast<int>(
+                                        info.global_rows * src_local_cols
+                                    );
+
+                                    vmafu::core::Vector<T> recv_buffer(recv_count);
+
+                                    comm.recv(recv_buffer.data(), recv_count, src, 0);
+
+                                    for (size_t i = 0; i < info.global_rows; i++) {
+                                        for (size_t j = 0; j < src_local_cols; j++) {
+                                            global(i, src_col_start + j) = recv_buffer[i * src_local_cols + j];
+                                        }
+                                    }
+                                }
+                            }
+                        } else {
+                            int send_count = static_cast<int>(
+                                info.global_rows * info.local_cols
                             );
+
+                            vmafu::core::Vector<T> send_buffer(send_count);
+
+                            for (size_t i = 0; i < info.global_rows; i++) {
+                                for (size_t j = 0; j < info.local_cols; j++) {
+                                    send_buffer[i * info.local_cols + j] = local(i, j);
+                                }
+                            }
+
+                            comm.send(send_buffer.data(), send_count, root, 0);
                         }
                     } else {
-                        if (rank == root) {
+                        if (comm_rank == root) {
                             global = Matrix<T>(info.global_rows, info.global_cols);
                         }
 
                         comm.gatherv(
                             local.data(),
                             static_cast<int>(info.local_rows * info.local_cols),
-                            (rank == root) ? global.data() : nullptr,
+                            (comm_rank == root) ? global.data() : nullptr,
                             gather_recvcounts.data(),
                             gather_displs.data(),
                             root

@@ -138,6 +138,20 @@ namespace vmafu {
 
         template <typename T>
         Vector<T> operator*(const Vector<T>& vector, const Matrix<T>& matrix);
+
+        // Comparison operations
+
+        template <typename T>
+        bool operator==(const Vector<T>& lhs, const Vector<T>& rhs);
+
+        template <typename T>
+        bool operator!=(const Vector<T>& lhs, const Vector<T>& rhs);
+
+        template <typename T>
+        bool operator==(const Matrix<T>& lhs, const Matrix<T>& rhs);
+
+        template <typename T>
+        bool operator!=(const Matrix<T>& lhs, const Matrix<T>& rhs);
     }
 }
 

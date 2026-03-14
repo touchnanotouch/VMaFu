@@ -106,8 +106,8 @@ namespace vmafu {
                     const vmafu::core::Vector<T>& global,
                     const VectorDistributionInfo& info,
                     vmafu::core::Vector<T>& local,
-                    int root,
-                    const communication::Communicator& comm
+                    int root = 0,
+                    const communication::Communicator& comm = communication::world()
                 );
 
                 template <typename T>
@@ -115,8 +115,8 @@ namespace vmafu {
                     const vmafu::core::Matrix<T>& global,
                     const MatrixDistributionInfo& info,
                     vmafu::core::Matrix<T>& local,
-                    int root,
-                    const communication::Communicator& comm
+                    int root = 0,
+                    const communication::Communicator& comm = communication::world()
                 );
 
                 template <typename T>
@@ -124,8 +124,8 @@ namespace vmafu {
                     vmafu::core::Vector<T>& global,
                     const VectorDistributionInfo& info,
                     const vmafu::core::Vector<T>& local,
-                    int root,
-                    const communication::Communicator& comm
+                    int root = 0,
+                    const communication::Communicator& comm = communication::world()
                 );
 
                 template <typename T>
@@ -133,8 +133,8 @@ namespace vmafu {
                     vmafu::core::Matrix<T>& global,
                     const MatrixDistributionInfo& info,
                     const vmafu::core::Matrix<T>& local,
-                    int root,
-                    const communication::Communicator& comm
+                    int root = 0,
+                    const communication::Communicator& comm = communication::world()
                 );
             }
         }

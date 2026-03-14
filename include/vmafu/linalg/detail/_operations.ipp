@@ -312,5 +312,69 @@ namespace vmafu {
 
             return result;
         }
+
+        // Comparison operations
+
+        template <typename T>
+        bool operator==(const Vector<T>& lhs, const Vector<T>& rhs) {
+            if (lhs.size() != rhs.size()) {
+                throw std::invalid_argument(
+                    "operations::operator==: Vector sizes must match"
+                );
+            }
+
+            VMAFU_IF_CONSTEXPR(VMAFU_IS_FLOATING_POINT_V(T)) {
+                constexpr T epsilon = T(1e-10);
+                for (size_t i = 0; i < lhs.size(); i++) {
+                    if (std::abs(lhs[i] - rhs[i]) > epsilon) {
+                        return false;
+                    }
+                }
+            } else {
+                for (size_t i = 0; i < lhs.size(); i++) {
+                    if (lhs[i] != rhs[i]) {
+                        return false;
+                    }
+                }
+            }
+
+            return true;
+        }
+
+        template <typename T>
+        bool operator!=(const Vector<T>& lhs, const Vector<T>& rhs) {
+            return !(lhs == rhs);
+        }
+
+        template <typename T>
+        bool operator==(const Matrix<T>& lhs, const Matrix<T>& rhs) {
+            if (lhs.rows() != rhs.rows() || lhs.cols() != rhs.cols()) {
+                throw std::invalid_argument(
+                    "operations::operator==: Matrix sizes must match"
+                );
+            }
+
+            VMAFU_IF_CONSTEXPR(VMAFU_IS_FLOATING_POINT_V(T)) {
+                constexpr T epsilon = T(1e-10);
+                for (size_t i = 0; i < lhs.size(); i++) {
+                    if (std::abs(lhs[i] - rhs[i]) > epsilon) {
+                        return false;
+                    }
+                }
+            } else {
+                for (size_t i = 0; i < lhs.size(); i++) {
+                    if (lhs[i] != rhs[i]) {
+                        return false;
+                    }
+                }
+            }
+
+            return true;
+        }
+
+        template <typename T>
+        bool operator!=(const Matrix<T>& lhs, const Matrix<T>& rhs) {
+            return !(lhs == rhs);
+        }
     }
 }

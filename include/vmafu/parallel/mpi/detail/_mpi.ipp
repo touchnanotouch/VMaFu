@@ -108,12 +108,12 @@ namespace vmafu {
             ) {
                 const communication::Communicator& comm = vector.communicator();
 
-                int rank = comm.rank();
-                int size = comm.size();
+                int comm_rank = comm.rank();
+                int comm_size = comm.size();
 
-                for (int i = 0; i < size; i++) {
-                    if (rank == i) {
-                        os << "Process " << rank << ":";
+                for (int i = 0; i < comm_size; i++) {
+                    if (comm_rank == i) {
+                        os << "Process " << comm_rank << ":";
                         os << "\n( local ) ";
 
                         vmafu::core::operator<<(os, vector.local_vector());
@@ -125,7 +125,7 @@ namespace vmafu {
                 }
 
                 vmafu::core::Vector<T> global_vector;
-                if (rank == 0) {
+                if (comm_rank == 0) {
                     global_vector = vmafu::core::Vector<T>(vector.global_size());
                 }
 
@@ -134,7 +134,7 @@ namespace vmafu {
                     0, comm
                 );
 
-                if (rank == 0) {
+                if (comm_rank == 0) {
                     os << "\n( global ) ";
                     vmafu::core::operator<<(os, global_vector);
                 }
@@ -149,12 +149,12 @@ namespace vmafu {
             ) {
                 const communication::Communicator& comm = matrix.communicator();
 
-                int rank = comm.rank();
-                int size = comm.size();
+                int comm_rank = comm.rank();
+                int comm_size = comm.size();
 
-                for (int i = 0; i < size; i++) {
-                    if (rank == i) {
-                        os << "Process " << rank << ":";
+                for (int i = 0; i < comm_size; i++) {
+                    if (comm_rank == i) {
+                        os << "Process " << comm_rank << ":";
                         os << "\n( local ) ";
 
                         vmafu::core::operator<<(os, matrix.local_matrix());
@@ -166,7 +166,7 @@ namespace vmafu {
                 }
 
                 vmafu::core::Matrix<T> global_matrix;
-                if (rank == 0) {
+                if (comm_rank == 0) {
                     global_matrix = vmafu::core::Matrix<T>(
                         matrix.global_rows(), matrix.global_cols()
                     );
@@ -177,7 +177,7 @@ namespace vmafu {
                     0, comm
                 );
 
-                if (rank == 0) {
+                if (comm_rank == 0) {
                     os << "\n( global ) ";
                     vmafu::core::operator<<(os, global_matrix);
                 }

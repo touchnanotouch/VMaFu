@@ -11,3 +11,5 @@ using vmafu::linalg::operator+;
 using vmafu::linalg::operator-;
 using vmafu::linalg::operator*;
 using vmafu::linalg::operator/;
+using vmafu::linalg::operator==;
+using vmafu::linalg::operator!=;
