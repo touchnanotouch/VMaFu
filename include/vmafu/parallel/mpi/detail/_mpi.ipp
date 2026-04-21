@@ -184,6 +184,51 @@ namespace vmafu {
 
                 return os;
             }
+
+            inline std::ostream& operator<<(
+                std::ostream& os,
+                const timing::Timer& timer
+            ) {
+                os << "Timer: {\n" \
+                   << "  is_running: " << timer.is_running() << ",\n" \
+                   << "  elapsed: " << timer.elapsed() << " s\n" \
+                   << "}";
+
+                return os;
+            }
+
+            inline std::ostream& operator<<(
+                std::ostream& os,
+                const timing::SampleTimer& timer
+            ) {
+                auto info = timer.info();
+
+                os << "( " << timer.name() << " ) SampleTimer: {\n" \
+                   << "  is_running: " << timer.is_running() << ",\n" \
+                   << "  info: {\n" \
+                   << "    min_time: " << info.min_time << ",\n" \
+                   << "    max_time: " << info.max_time << ",\n" \
+                   << "    avg_time: " << info.avg_time << "\n" \
+                   << "  }\n" \
+                   << "}";
+
+                return os;
+            }
+
+            inline std::ostream& operator<<(
+                std::ostream& os,
+                const timing::SyncTimer& timer
+            ) {
+                os << "( " << timer.name() << " ) SyncTimer: {\n" \
+                   << "  rank: " << mpi::communication::rank() << ",\n" \
+                   << "  elapsed: " << timer.elapsed() << " s,\n" \
+                   << "  min_time: " << timer.min_time() << " s,\n" \
+                   << "  max_time: " << timer.max_time() << " s,\n" \
+                   << "  avg_time: " << timer.avg_time() << " s\n" \
+                   << "}";
+
+                return os;
+            }
         }
     }
 }

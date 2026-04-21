@@ -83,14 +83,14 @@ namespace vmafu {
                 inline VectorDistributionInfo vector_distribution_info(
                     VectorDistributionType type,
                     size_t size,
-                    const communication::Communicator& comm
+                    const communication::Communicator& comm = communication::world()
                 );
 
                 inline MatrixDistributionInfo matrix_distribution_info(
                     MatrixDistributionType type,
                     size_t rows,
                     size_t cols,
-                    const communication::Communicator& comm
+                    const communication::Communicator& comm = communication::world()
                 );
 
                 inline std::pair<int, int> process_grid(

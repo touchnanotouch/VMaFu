@@ -15,6 +15,7 @@
 #include "distribution/_distribution.hpp"
 #include "containers/_VectorMPI.hpp"
 #include "containers/_MatrixMPI.hpp"
+#include "utils/_timing.hpp"
 
 
 namespace vmafu {
@@ -57,6 +58,12 @@ namespace vmafu {
 
             template <typename T>
             std::ostream& operator<<(std::ostream& os, const containers::MatrixMPI<T>& matrix);
+
+            std::ostream& operator<<(std::ostream& os, const timing::Timer& timer);
+
+            std::ostream& operator<<(std::ostream& os, const timing::SampleTimer& timer);
+
+            std::ostream& operator<<(std::ostream& os, const timing::SyncTimer& timer);
         }
     }
 }

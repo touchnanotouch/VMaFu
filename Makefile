@@ -1,4 +1,4 @@
-.PHONY: help build build-mpi build-nompi run run-mpi run-nompi clean clean-mpi clean-nompi info check-mpi
+.PHONY: help build build-mpi build-nompi run run-mpi run-nompi clean clean-mpi clean-nompi info check-mpi benchmark benchmark-all plot generate-data report excel compare
 
 # Configuration
 
@@ -6,12 +6,17 @@ BUILD_DIR_MPI = build_mpi
 BUILD_DIR_NOMPI = build_nompi
 
 NUM_PROCS ?= 8
+DATA_SIZE ?= 500
 
 DEMO_EXEC = demo.exe
+BENCHMARK_EXEC = benchmark.exe
 CMAKE_EXEC = "C:/msys64/mingw64/bin/cmake.exe"
 MPI_EXEC = "C:/Program Files/Microsoft MPI/Bin/mpiexec.exe"
 
 BUILD_TYPE ?= nompi
+
+BENCHMARK_DIR = benchmark
+BENCHMARK_OUTPUT = $(BENCHMARK_DIR)/results.txt
 
 help:
 	@echo "Makefile Commands:"
@@ -110,3 +115,45 @@ clean-nompi:
 	else \
 		echo "No non-MPI build directory found"; \
 	fi
+
+# Benchmark targets
+
+benchmark: $(BUILD_DIR_MPI)
+	@echo "Building benchmark..."
+	@cd $(BUILD_DIR_MPI) && $(CMAKE_EXEC) -DVMAFU_USE_MPI=ON .. && $(CMAKE_EXEC) --build . --target benchmark
+	@echo "Benchmark built: $(BUILD_DIR_MPI)/$(BENCHMARK_EXEC)"
+
+benchmark-run: benchmark
+	@echo "Running benchmark with $(NUM_PROCS) processes..."
+	@$(MPI_EXEC) -n $(NUM_PROCS) "./$(BUILD_DIR_MPI)/$(BENCHMARK_EXEC)" > $(BENCHMARK_OUTPUT)
+	@echo "Results saved to $(BENCHMARK_OUTPUT)"
+
+benchmark-all: benchmark
+	@echo "Running benchmark for 1-9 processes..."
+	@echo "processes|distribution|load_time|distribute_time|compute_time|total_time|verified" > $(BENCHMARK_OUTPUT)
+	@echo "---------|------------|---------|---------------|------------|----------|--------" >> $(BENCHMARK_OUTPUT)
+	@for i in 1 2 3 4 5 6 7 8 9; do \
+		echo "Running with $$i processes..."; \
+		$(MPI_EXEC) -n $$i "./$(BUILD_DIR_MPI)/$(BENCHMARK_EXEC)" | tail -n +3 >> $(BENCHMARK_OUTPUT); \
+	done
+	@echo "All results saved to $(BENCHMARK_OUTPUT)"
+
+plot:
+	@echo "Generating plots..."
+	@cd $(BENCHMARK_DIR) && python python/plot_benchmark.py
+
+generate-data:
+	@echo "Generating test data (matrix size: $(DATA_SIZE)x$(DATA_SIZE))..."
+	@python $(BENCHMARK_DIR)/python/generate_data.py --size $(DATA_SIZE)
+
+report: plot
+	@echo "Generating Excel report..."
+	@cd $(BENCHMARK_DIR) && python python/export_to_excel.py
+
+excel:
+	@echo "Generating Excel report..."
+	@cd $(BENCHMARK_DIR) && python python/export_to_excel.py
+
+compare:
+	@echo "Usage: make compare CONFIG1='Name1:path1.txt' CONFIG2='Name2:path2.txt'"
+	@cd $(BENCHMARK_DIR) && python python/compare_configs.py --config1 "$(CONFIG1)" --config2 "$(CONFIG2)"

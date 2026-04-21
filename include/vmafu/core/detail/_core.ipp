@@ -49,7 +49,7 @@ namespace vmafu {
                 os << "]";
 
                 if (i + 1 < matrix.rows()) {
-                    os << "\n";
+                    os << ",\n";
                 }
             }
 

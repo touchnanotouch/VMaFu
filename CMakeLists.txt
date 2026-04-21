@@ -26,3 +26,8 @@ endif()
 
 add_executable(demo demo/main.cpp)
 target_link_libraries(demo vmafu)
+
+# Benchmark executable
+
+add_executable(benchmark benchmark/main.cpp)
+target_link_libraries(benchmark vmafu)
